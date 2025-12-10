@@ -38,13 +38,13 @@
         }
         #view-all-btn:hover { background: #0056b3; transform: scale(1.05); }
 
-        /* [추가됨] 오디오 토글 버튼 */
+        /* [복구됨] 오디오 토글 버튼 스타일 */
         #audio-btn {
-            position: absolute; top: 195px; right: 30px; /* 전체보기 버튼 아래 */
+            position: absolute; top: 195px; right: 30px; /* PC 위치: 전체보기 버튼 아래 */
             width: 40px; height: 40px;
-            background: rgba(44, 62, 80, 0.7); /* 반투명 */
+            background: rgba(44, 62, 80, 0.8); 
             color: white; border: none; border-radius: 50%;
-            cursor: pointer; z-index: 20;
+            cursor: pointer; z-index: 20; pointer-events: auto;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.2rem;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -119,7 +119,7 @@
                 padding: 5px 12px; font-size: 0.75rem; background: #2c3e50; width: auto; white-space: nowrap; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             }
 
-            /* 모바일에서 오디오 버튼 위치: 우측 상단 (안내문구 옆) */
+            /* [모바일] 오디오 버튼 위치: 우측 상단 */
             #audio-btn {
                 top: 20px; right: 20px; 
                 width: 36px; height: 36px; font-size: 1rem;
@@ -188,7 +188,7 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwImwxFykweItZzd9OEJpssDeDKmdolp3icDNPZQFJ2-9hwYbrKyes_HY38Kq0dPnKS2g/exec";
 
-    // --- [사운드 객체] ---
+    // --- [사운드 객체 생성] ---
     const audioFiles = {};
     const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset'];
     let isBgmOn = false; // BGM 상태 플래그
@@ -207,7 +207,7 @@
         audioFiles[name] = audio;
     });
 
-    // 오디오 버튼 제어
+    // [복구됨] 오디오 버튼 제어
     const audioBtn = document.getElementById('audio-btn');
     audioBtn.addEventListener('click', () => {
         if (isBgmOn) {
@@ -224,9 +224,7 @@
     });
     
     function playSound(name) {
-        // 효과음은 버튼이 켜져있거나(BGM ON) 상관없이 나게 할 수도 있지만,
-        // 보통 소리를 켰을 때만 나는 게 자연스러우므로 isBgmOn 체크를 할 수도 있습니다.
-        // 여기서는 효과음은 항상 나게 하되, 사용자가 명시적으로 켰을 때만 나게 하려면 아래 if문 추가.
+        // 소리가 켜져있을 때만 효과음 재생 (원하시면 if문 제거해서 항상 재생 가능)
         if (isBgmOn && audioFiles[name]) {
             audioFiles[name].currentTime = 0;
             audioFiles[name].play().catch(e => {});
@@ -271,7 +269,7 @@
                 window.distributeSingleMessage({ name: name, text: text });
             }
             
-            playSound('sent');
+            playSound('sent'); // 사운드 재생
             showCustomAlert();
 
         } catch (error) {
@@ -364,7 +362,7 @@
         
         giveVacation() { 
             this.isPaused=true; 
-            playSound('rest'); // 휴가 사운드
+            playSound('rest'); 
             if(this.pauseTimer)clearTimeout(this.pauseTimer); 
             this.pauseTimer=setTimeout(()=>{this.isPaused=false;},5000); 
         }
@@ -414,7 +412,6 @@
             else if(this.role==='OFFICE'){ctx.fillStyle='#333';ctx.fillRect(-w/2+3,-h/2-3,6,2);}
             else if(this.role==='BUILDER'&&this.state==='DELIVERING'){ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2-2,-h/2,2,6);ctx.fillRect(w/2,-h/2,2,6);}
             
-            // [도구 그리기: 휴가중 아닐 때만]
             if (this.role === 'BUILDER' && !this.isPaused) {
                 if (this.busyState === 'CLEAN') {
                     ctx.save(); ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02)*8, 18); ctx.stroke();
@@ -519,8 +516,6 @@
     // 모바일 터치 대응 (탭 시 말풍선 표시 or 휴가)
     canvas.addEventListener('touchstart', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay')) return;
-        
-        // 버튼 누르지 않고 화면 터치해도 소리 재생 안 함 (정책상) -> 사용자가 버튼 누르게 유도
         
         const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
         let touchedFairy = false;
