@@ -38,19 +38,22 @@
         }
         #view-all-btn:hover { background: #0056b3; transform: scale(1.05); }
 
-        /* [복구됨] 오디오 토글 버튼 스타일 */
+        /* BGM 버튼: 우측 하단 고정 */
         #audio-btn {
-            position: absolute; top: 195px; right: 30px; /* PC 위치: 전체보기 버튼 아래 */
-            width: 40px; height: 40px;
-            background: rgba(44, 62, 80, 0.8); 
-            color: white; border: none; border-radius: 50%;
-            cursor: pointer; z-index: 20; pointer-events: auto;
+            position: fixed; 
+            bottom: 30px; right: 30px; 
+            width: 60px; height: 60px; 
+            background-color: #2c3e50; 
+            color: white; 
+            border: 3px solid white; 
+            border-radius: 50%;
+            cursor: pointer; z-index: 1000; pointer-events: auto;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: transform 0.2s, background 0.2s;
+            font-size: 1.8rem; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
         }
-        #audio-btn:hover { background: #0056b3; transform: scale(1.1); }
+        #audio-btn:active { transform: scale(0.9); }
 
         /* 커스텀 알림창 */
         #custom-alert {
@@ -121,8 +124,8 @@
 
             /* [모바일] 오디오 버튼 위치: 우측 상단 */
             #audio-btn {
-                top: 20px; right: 20px; 
-                width: 36px; height: 36px; font-size: 1rem;
+                bottom: auto; top: 20px; right: 20px; 
+                width: 45px; height: 45px; font-size: 1.4rem;
             }
 
             #ui { top: 85px; left: 50%; transform: translateX(-50%); width: 90%; text-align: center; }
@@ -188,14 +191,14 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwImwxFykweItZzd9OEJpssDeDKmdolp3icDNPZQFJ2-9hwYbrKyes_HY38Kq0dPnKS2g/exec";
 
-    // --- [사운드 객체 생성] ---
+    // --- [사운드 객체: 모두 MP3로 통일] ---
     const audioFiles = {};
     const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset'];
-    let isBgmOn = false; // BGM 상태 플래그
+    let isBgmOn = false; 
     
     soundNames.forEach(name => {
-        const ext = name === 'bgm' ? 'wav' : 'mp3';
-        const audio = new Audio(`sounds/${name}.${ext}`);
+        // ★ 중요: bgm도 mp3로 찾도록 수정됨
+        const audio = new Audio(`sounds/${name}.mp3`);
         
         if(name === 'bgm') {
             audio.loop = true;
@@ -207,24 +210,30 @@
         audioFiles[name] = audio;
     });
 
-    // [복구됨] 오디오 버튼 제어
+    // [버튼 기능]
     const audioBtn = document.getElementById('audio-btn');
     audioBtn.addEventListener('click', () => {
         if (isBgmOn) {
-            // 끄기
             audioFiles['bgm'].pause();
             audioBtn.innerText = '🔇';
             isBgmOn = false;
         } else {
-            // 켜기
-            audioFiles['bgm'].play().catch(e => console.log("재생 실패"));
-            audioBtn.innerText = '🔊';
-            isBgmOn = true;
+            // 버튼 눌렀을 때 명시적으로 재생
+            audioFiles['bgm'].play()
+                .then(() => {
+                    audioBtn.innerText = '🔊';
+                    isBgmOn = true;
+                })
+                .catch(e => {
+                    console.error("재생 실패:", e);
+                    // 파일이 덜 로딩되었거나 경로 문제일 때
+                    alert("배경음악 파일을 로딩 중이거나 찾을 수 없습니다. (sounds/bgm.mp3)");
+                });
         }
     });
     
     function playSound(name) {
-        // 소리가 켜져있을 때만 효과음 재생 (원하시면 if문 제거해서 항상 재생 가능)
+        // 사용자가 소리를 켰을 때만 효과음 재생
         if (isBgmOn && audioFiles[name]) {
             audioFiles[name].currentTime = 0;
             audioFiles[name].play().catch(e => {});
@@ -247,6 +256,7 @@
     }
 
     async function sendMessage() {
+        // 메시지 전송 시에는 BGM 자동 켜기 안 함 (사용자 선택 존중)
         const name = nameInput.value.trim() || '익명';
         const text = msgInput.value.trim();
         
@@ -269,7 +279,7 @@
                 window.distributeSingleMessage({ name: name, text: text });
             }
             
-            playSound('sent'); // 사운드 재생
+            playSound('sent');
             showCustomAlert();
 
         } catch (error) {
@@ -412,6 +422,7 @@
             else if(this.role==='OFFICE'){ctx.fillStyle='#333';ctx.fillRect(-w/2+3,-h/2-3,6,2);}
             else if(this.role==='BUILDER'&&this.state==='DELIVERING'){ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2-2,-h/2,2,6);ctx.fillRect(w/2,-h/2,2,6);}
             
+            // [도구 그리기: 휴가중 아닐 때만]
             if (this.role === 'BUILDER' && !this.isPaused) {
                 if (this.busyState === 'CLEAN') {
                     ctx.save(); ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02)*8, 18); ctx.stroke();
@@ -515,7 +526,7 @@
 
     // 모바일 터치 대응 (탭 시 말풍선 표시 or 휴가)
     canvas.addEventListener('touchstart', (e) => {
-        if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay')) return;
+        if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn')) return;
         
         const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
         let touchedFairy = false;
