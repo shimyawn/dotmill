@@ -328,12 +328,12 @@
         engineerCount: 3, 
         officeCount: 50, 
         colors: ['#0056b3', '#333333', '#555555', '#222222'], 
-        dropInterval: 600, 
+        dropInterval: 300, // [2배 빠르게 수정됨]
         beltSpeed: 2 
     };
 
     let particles=[], fairies=[], beltOffset=0, lastDropTime=0, mouseX=0, mouseY=0, hoveredFairy=null;
-    // [추가됨] 모니터 색상 및 로고 완성 상태 변수
+    // [모니터 효과 변수]
     let monitorHueOffset = 0;
     let isLogoComplete = false;
 
@@ -474,9 +474,9 @@
         fairies.forEach((f, i) => {
             if (f.role === 'OFFICE') {
                 const deskX = f.seatX; const deskY = f.seatY;
-                ctx.fillStyle = '#bcaaa4'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#444'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25);
+                ctx.fillStyle = '#bcaaa4'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#444'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25); 
                 
-                // [수정됨] 모니터 알록달록 효과 + 완성시 발광
+                // [모니터 효과]
                 const hue = (monitorHueOffset + i * 10) % 360;
                 const saturation = isLogoComplete ? '100%' : '70%';
                 const lightness = isLogoComplete ? '60%' : '80%';
@@ -486,30 +486,26 @@
                 ctx.shadowBlur = 0;
             }
         });
-        
-        ctx.fillStyle = '#bdc3c7'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign='right'; 
-        ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
+        ctx.fillStyle = '#bdc3c7'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
     }
     function animate() {
         const now = Date.now(); if (now - lastDropTime > CONFIG.dropInterval) { const p = particles.find(p => p.state === 'WAITING'); if (p) { p.state = 'FALLING'; lastDropTime = now; } }
         ctx.clearRect(0, 0, canvas.width, canvas.height); drawEnvironment(); fairies.forEach(f => { f.update(); f.draw(); }); particles.forEach(p => { p.update(); p.draw(); });
         if (hoveredFairy) { hoveredFairy.drawBubble(); canvas.style.cursor = 'pointer'; } else { canvas.style.cursor = 'default'; }
         
-        // [추가됨] 로고 완성 체크 및 효과
+        // [로고 완성 체크]
         const placedCount = particles.filter(p => p.state === 'PLACED').length;
         isLogoComplete = (placedCount === particles.length && particles.length > 0);
-        monitorHueOffset += isLogoComplete ? 5 : 1; // 완성되면 더 빠르게 색상 변경
+        monitorHueOffset += isLogoComplete ? 5 : 1; 
 
         ctx.save(); 
         if (isLogoComplete) {
-             // 완성시 무지개 발광 효과
              const hue = (monitorHueOffset * 2) % 360;
              ctx.globalAlpha = 0.8;
              ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
              ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
              ctx.shadowBlur = 30;
         } else {
-             // 미완성시 기존 희미한 가이드
              ctx.globalAlpha = 0.05;
              ctx.fillStyle = '#000';
         }
@@ -519,7 +515,6 @@
         requestAnimationFrame(animate);
     }
     
-    // 자동 로딩
     async function loadInitialMessages() {
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL);
@@ -538,7 +533,6 @@
         } catch (e) { console.error("Initial fetch failed:", e); }
     }
 
-    // 모바일 터치 대응 (탭 시 말풍선 표시 or 휴가)
     canvas.addEventListener('touchstart', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn')) return;
         
@@ -566,7 +560,6 @@
         }
     }, { passive: false });
 
-    // PC 마우스
     window.addEventListener('mousedown', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#list-modal') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
