@@ -96,7 +96,7 @@
             100% { opacity: 0; transform: translate(-50%, -60%); } 
         }
 
-        /* ★★★ [모바일 전용 스타일] ★★★ */
+        /* ★★★ [모바일 전용 스타일 최종 수정] ★★★ */
         @media (max-width: 768px) {
             /* 1. 안내 멘트: 더 작고 컴팩트하게 */
             #guide-text {
@@ -109,8 +109,12 @@
                 border: 1px solid #eee;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             }
-            #guide-text h2 { font-size: 0.9rem; margin-bottom: 3px; }
-            #guide-text p { font-size: 0.75rem; line-height: 1.3; color: #555; }
+            #guide-text h2 { 
+                font-size: 0.9rem; margin-bottom: 3px; 
+            }
+            #guide-text p { 
+                font-size: 0.75rem; line-height: 1.3; color: #555;
+            }
 
             /* 2. 전체보기 버튼 */
             #view-all-btn {
@@ -204,12 +208,12 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwImwxFykweItZzd9OEJpssDeDKmdolp3icDNPZQFJ2-9hwYbrKyes_HY38Kq0dPnKS2g/exec";
 
-    // --- [사운드 객체 안전 생성] ---
-    // bgm은 wav, 나머지는 mp3
+    // --- [사운드 객체] ---
     const audioFiles = {};
     const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset'];
     
     soundNames.forEach(name => {
+        // bgm만 wav, 나머지는 mp3
         const ext = name === 'bgm' ? 'wav' : 'mp3';
         const audio = new Audio(`sounds/${name}.${ext}`);
         
@@ -226,7 +230,7 @@
     let isBgmStarted = false;
     function startBgm() {
         if (!isBgmStarted) {
-            audioFiles['bgm'].play().catch(e => console.log("BGM 대기 (클릭 필요)"));
+            audioFiles['bgm'].play().catch(e => console.log("BGM 대기 중"));
             isBgmStarted = true;
         }
     }
@@ -327,11 +331,8 @@
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    
-    // 모바일 감지
     const isMobile = window.innerWidth <= 768;
 
-    // 모바일이면 토스트 띄우기
     if (isMobile) {
         const toast = document.getElementById('pc-toast');
         toast.style.display = 'block';
@@ -367,22 +368,16 @@
             this.isPaused=false; this.pauseTimer=null; this.busyState='NONE'; this.busyTimer=Math.random()*500;
             this.busyTargetX=0; this.busyTargetY=0; this.seatX=0; this.seatY=0;
             this.assignedMessage = null; this.assignmentTime = 0; 
-
             if(role==='ENGINEER'){this.x=zones.beltStart.x+(zones.beltEnd.x-zones.beltStart.x)*0.5;this.y=zones.beltStart.y+30;}
             else if(role==='OFFICE'){ const c=Math.ceil(CONFIG.officeCount/2),r=Math.floor(idx/c),cl=idx%c,dw=60,dh=60,tw=c*dw,sx=(canvas.width-tw)/2+30,sy=zones.office.y+50; this.seatX=sx+cl*dw;this.seatY=sy+r*dh;this.x=this.seatX;this.y=this.seatY;this.busyState='TYPING';} 
-            else if(role==='FOREMAN'){
-                this.x = canvas.width/2 - 250;
-                this.y = canvas.height/2 - 20;
-            }
+            else if(role==='FOREMAN'){ this.x = canvas.width/2 - 250; this.y = canvas.height/2 - 20; }
         }
-        
         giveVacation() { 
             this.isPaused=true; 
             playSound('rest'); // 휴가 사운드
             if(this.pauseTimer)clearTimeout(this.pauseTimer); 
             this.pauseTimer=setTimeout(()=>{this.isPaused=false;},5000); 
         }
-
         update() { if(this.isPaused)return; this.animFrame+=0.1; if(this.role==='BUILDER')this.updateBuilder(); else if(this.role==='OFFICE')this.updateOffice(); }
         updateOffice(){if(this.busyState==='TYPING'){this.busyTimer--;if(this.busyTimer<=0){if(Math.random()<0.05){this.busyState='PATROL';this.busyTargetX=zones.office.x+Math.random()*zones.office.w;this.busyTargetY=zones.office.y+Math.random()*zones.office.h;}else{this.busyTimer=200+Math.random()*400;}}}else if(this.busyState==='PATROL'){if(this.moveTo(this.busyTargetX,this.busyTargetY)){this.busyState='WAITING_TO_RETURN';this.busyTimer=50+Math.random()*100;}}else if(this.busyState==='WAITING_TO_RETURN'){this.busyTimer--;if(this.busyTimer<=0)this.busyState='RETURN';}else if(this.busyState==='RETURN'){if(this.moveTo(this.seatX,this.seatY)){this.busyState='TYPING';this.busyTimer=300+Math.random()*500;}}}
         
@@ -432,21 +427,13 @@
             // [도구 그리기: 휴가중이 아닐 때만]
             if (this.role === 'BUILDER' && !this.isPaused) {
                 if (this.busyState === 'CLEAN') {
-                    ctx.save();
-                    ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; 
-                    ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02)*8, 18); ctx.stroke();
-                    ctx.fillStyle='#d7ccc8'; ctx.beginPath(); ctx.arc(4 + Math.sin(Date.now()*0.02)*8, 18, 3, 0, Math.PI); ctx.fill();
-                    ctx.restore();
+                    ctx.save(); ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02)*8, 18); ctx.stroke();
+                    ctx.fillStyle='#d7ccc8'; ctx.beginPath(); ctx.arc(4 + Math.sin(Date.now()*0.02)*8, 18, 3, 0, Math.PI); ctx.fill(); ctx.restore();
                 } else if (this.busyState === 'HAMMER') {
-                    ctx.save();
-                    ctx.translate(6, 0); 
-                    ctx.rotate(Math.sin(Date.now() * 0.2) * 0.8);
-                    ctx.fillStyle = '#5d4037'; ctx.fillRect(0, -10, 2, 12); 
-                    ctx.fillStyle = '#555'; ctx.fillRect(-3, -12, 8, 4); 
-                    ctx.restore();
+                    ctx.save(); ctx.translate(6, 0); ctx.rotate(Math.sin(Date.now() * 0.2) * 0.8);
+                    ctx.fillStyle = '#5d4037'; ctx.fillRect(0, -10, 2, 12); ctx.fillStyle = '#555'; ctx.fillRect(-3, -12, 8, 4); ctx.restore();
                 }
             }
-
             ctx.restore();
         }
         drawBubble() {
@@ -477,25 +464,16 @@
         for(let i=0; i<CONFIG.officeCount; i++) fairies.push(new Fairy('OFFICE', i));
     }
 
-    // 화면 밖 직원에게 배정 금지 (모바일 대응)
-    function isVisible(f) {
-        return f.x > 20 && f.x < canvas.width - 20 && f.y > 0 && f.y < canvas.height;
-    }
+    function isVisible(f) { return f.x > 20 && f.x < canvas.width - 20 && f.y > 0 && f.y < canvas.height; }
 
     window.distributeSingleMessage = (newMsg) => {
         let target = fairies.find(f => f.assignedMessage === null && isVisible(f));
         if (!target) {
             const visibleFairies = fairies.filter(f => isVisible(f));
-            if (visibleFairies.length > 0) {
-                target = visibleFairies[Math.floor(Math.random() * visibleFairies.length)];
-            } else {
-                target = fairies[Math.floor(Math.random() * fairies.length)];
-            }
+            if (visibleFairies.length > 0) { target = visibleFairies[Math.floor(Math.random() * visibleFairies.length)]; } 
+            else { target = fairies[Math.floor(Math.random() * fairies.length)]; }
         }
-        if (target) {
-            target.assignedMessage = newMsg;
-            target.assignmentTime = Date.now();
-        }
+        if (target) { target.assignedMessage = newMsg; target.assignmentTime = Date.now(); }
     };
 
     function drawEnvironment() {
@@ -511,9 +489,7 @@
                 ctx.fillStyle = '#bcaaa4'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#444'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25); ctx.fillStyle = '#dcdde1'; ctx.fillRect(deskX - 13, deskY - 18, 26, 20);
             }
         });
-        
-        ctx.fillStyle = '#bdc3c7'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign='right'; 
-        ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
+        ctx.fillStyle = '#bdc3c7'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
     }
     function animate() {
         const now = Date.now(); if (now - lastDropTime > CONFIG.dropInterval) { const p = particles.find(p => p.state === 'WAITING'); if (p) { p.state = 'FALLING'; lastDropTime = now; } }
@@ -523,7 +499,6 @@
         requestAnimationFrame(animate);
     }
     
-    // 자동 로딩
     async function loadInitialMessages() {
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL);
@@ -539,57 +514,40 @@
                     }
                 });
             }
-        } catch (e) {
-            console.error("Initial fetch failed:", e);
-        }
+        } catch (e) { console.error("Initial fetch failed:", e); }
     }
 
-    // 모바일 터치
     canvas.addEventListener('touchstart', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay')) return;
-        
-        startBgm(); // [사운드] 모바일 터치 시 BGM 시작 시도
-
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const tx = touch.clientX - rect.left;
-        const ty = touch.clientY - rect.top;
+        startBgm(); 
+        const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
         let touchedFairy = false;
-
         fairies.forEach(f => {
             if (Math.abs(tx - f.x) < 40 && Math.abs(ty - f.y) < 50) {
                 touchedFairy = true;
-                if (f.assignedMessage) {
-                    hoveredFairy = f; 
-                    playSound('pop'); // [사운드]
-                    setTimeout(() => { hoveredFairy = null; }, 3000);
-                } else {
-                    f.giveVacation();
-                }
+                if (f.assignedMessage) { hoveredFairy = f; playSound('pop'); setTimeout(() => { hoveredFairy = null; }, 3000); } 
+                else { f.giveVacation(); }
             }
         });
-
         if (!touchedFairy) {
             const cx = canvas.width / 2; const cy = canvas.height / 2;
             if (tx > cx - 200 && tx < cx + 200 && ty > cy - 80 && ty < cy + 80) {
                 particles.forEach(p => { if (p.state === 'PLACED') p.reset(); });
                 fairies.forEach(f => { if(!f.isPaused) { if(f.targetItem) { f.targetItem.reset(); f.targetItem = null; } f.state = 'IDLE'; } });
-                playSound('reset'); // [사운드]
+                playSound('reset');
             }
         }
     }, { passive: false });
 
-    // PC 마우스
     window.addEventListener('mousedown', (e) => {
-        startBgm(); // [사운드] 클릭 시 BGM 시작
-
+        startBgm(); 
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#list-modal') || e.target.closest('#view-all-btn')) return;
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
         let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); if (clickedFairy) return;
         if (cx > canvas.width/2 - 250 && cx < canvas.width/2 + 250 && cy > canvas.height/2 - 80 && cy < canvas.height/2 + 80) { 
             particles.forEach(p => { if (p.state === 'PLACED') p.reset(); }); 
             fairies.forEach(f => { if(!f.isPaused) { if(f.targetItem) { f.targetItem.reset(); f.targetItem = null; } f.state = 'IDLE'; } }); 
-            playSound('reset'); // [사운드]
+            playSound('reset');
         }
     });
 
@@ -600,7 +558,7 @@
         fairies.forEach(f => { const dx = mouseX - f.x; const dy = mouseY - f.y; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < minDist) { minDist = dist; closest = f; } }); 
         hoveredFairy = closest;
         if (closest !== prevHoveredFairy) {
-            if (closest && closest.assignedMessage) { playSound('pop'); } // [사운드]
+            if (closest && closest.assignedMessage) { playSound('pop'); }
             prevHoveredFairy = closest;
         }
     });
