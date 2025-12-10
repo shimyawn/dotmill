@@ -38,7 +38,7 @@
         }
         #view-all-btn:hover { background: #0056b3; transform: scale(1.05); }
 
-        /* BGM 버튼: 우측 하단 고정 */
+        /* BGM 버튼 */
         #audio-btn {
             position: fixed; 
             bottom: 30px; right: 30px; 
@@ -191,15 +191,13 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwImwxFykweItZzd9OEJpssDeDKmdolp3icDNPZQFJ2-9hwYbrKyes_HY38Kq0dPnKS2g/exec";
 
-    // --- [사운드 객체: 모두 MP3로 통일] ---
+    // --- [사운드 객체: MP3 통일] ---
     const audioFiles = {};
     const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset'];
     let isBgmOn = false; 
     
     soundNames.forEach(name => {
-        // ★ 중요: bgm도 mp3로 찾도록 수정됨
         const audio = new Audio(`sounds/${name}.mp3`);
-        
         if(name === 'bgm') {
             audio.loop = true;
             audio.volume = 0.4;
@@ -218,7 +216,6 @@
             audioBtn.innerText = '🔇';
             isBgmOn = false;
         } else {
-            // 버튼 눌렀을 때 명시적으로 재생
             audioFiles['bgm'].play()
                 .then(() => {
                     audioBtn.innerText = '🔊';
@@ -226,14 +223,12 @@
                 })
                 .catch(e => {
                     console.error("재생 실패:", e);
-                    // 파일이 덜 로딩되었거나 경로 문제일 때
-                    alert("배경음악 파일을 로딩 중이거나 찾을 수 없습니다. (sounds/bgm.mp3)");
+                    alert("배경음악 파일(sounds/bgm.mp3)을 찾을 수 없거나 로딩 중입니다.");
                 });
         }
     });
     
     function playSound(name) {
-        // 사용자가 소리를 켰을 때만 효과음 재생
         if (isBgmOn && audioFiles[name]) {
             audioFiles[name].currentTime = 0;
             audioFiles[name].play().catch(e => {});
@@ -256,17 +251,13 @@
     }
 
     async function sendMessage() {
-        // 메시지 전송 시에는 BGM 자동 켜기 안 함 (사용자 선택 존중)
         const name = nameInput.value.trim() || '익명';
         const text = msgInput.value.trim();
-        
         if (!text) return alert("내용을 입력해주세요!");
-
         sendBtn.disabled = true;
         const originalPlaceholder = msgInput.placeholder;
         msgInput.value = '';
         msgInput.placeholder = '전송 중... 🚀';
-
         try {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -274,17 +265,12 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: name, text: text })
             });
-
-            if (window.distributeSingleMessage) {
-                window.distributeSingleMessage({ name: name, text: text });
-            }
-            
+            if (window.distributeSingleMessage) window.distributeSingleMessage({ name: name, text: text });
             playSound('sent');
             showCustomAlert();
-
         } catch (error) {
             console.error('Error:', error);
-            alert("전송에 실패했습니다. 인터넷 연결을 확인해주세요.");
+            alert("전송에 실패했습니다.");
         } finally {
             sendBtn.disabled = false;
             msgInput.placeholder = originalPlaceholder;
@@ -304,16 +290,14 @@
             }
             data.forEach(row => {
                 const dateRaw = new Date(row[0]);
-                const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + 
-                                dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
+                const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.innerHTML = `<div class="list-date">${dateStr}</div><div><span class="list-name">${row[1]}</span> <span class="list-text">${row[2]}</span></div>`;
                 msgList.appendChild(div);
             });
         } catch (error) {
-            console.error(error);
-            msgList.innerHTML = '<div class="empty-msg">불러오기 실패!<br>구글 스크립트 연결을 확인해주세요.</div>';
+            msgList.innerHTML = '<div class="empty-msg">불러오기 실패!</div>';
         }
     }
 
@@ -349,6 +333,10 @@
     };
 
     let particles=[], fairies=[], beltOffset=0, lastDropTime=0, mouseX=0, mouseY=0, hoveredFairy=null;
+    // [추가됨] 모니터 색상 및 로고 완성 상태 변수
+    let monitorHueOffset = 0;
+    let isLogoComplete = false;
+
     let zones={ hopper:{x:0,y:0}, beltStart:{x:0,y:0}, beltEnd:{x:0,y:0}, storage:{x:0,y:0}, office:{x:0,y:0,w:0,h:0} };
 
     class Particle {
@@ -369,17 +357,14 @@
             else if(role==='OFFICE'){ const c=Math.ceil(CONFIG.officeCount/2),r=Math.floor(idx/c),cl=idx%c,dw=60,dh=60,tw=c*dw,sx=(canvas.width-tw)/2+30,sy=zones.office.y+50; this.seatX=sx+cl*dw;this.seatY=sy+r*dh;this.x=this.seatX;this.y=this.seatY;this.busyState='TYPING';} 
             else if(role==='FOREMAN'){ this.x = canvas.width/2 - 250; this.y = canvas.height/2 - 20; }
         }
-        
         giveVacation() { 
             this.isPaused=true; 
             playSound('rest'); 
             if(this.pauseTimer)clearTimeout(this.pauseTimer); 
             this.pauseTimer=setTimeout(()=>{this.isPaused=false;},5000); 
         }
-
         update() { if(this.isPaused)return; this.animFrame+=0.1; if(this.role==='BUILDER')this.updateBuilder(); else if(this.role==='OFFICE')this.updateOffice(); }
         updateOffice(){if(this.busyState==='TYPING'){this.busyTimer--;if(this.busyTimer<=0){if(Math.random()<0.05){this.busyState='PATROL';this.busyTargetX=zones.office.x+Math.random()*zones.office.w;this.busyTargetY=zones.office.y+Math.random()*zones.office.h;}else{this.busyTimer=200+Math.random()*400;}}}else if(this.busyState==='PATROL'){if(this.moveTo(this.busyTargetX,this.busyTargetY)){this.busyState='WAITING_TO_RETURN';this.busyTimer=50+Math.random()*100;}}else if(this.busyState==='WAITING_TO_RETURN'){this.busyTimer--;if(this.busyTimer<=0)this.busyState='RETURN';}else if(this.busyState==='RETURN'){if(this.moveTo(this.seatX,this.seatY)){this.busyState='TYPING';this.busyTimer=300+Math.random()*500;}}}
-        
         updateBuilder(){
             if(!this.targetItem){
                 const job=particles.find(p=>p.state==='IN_STORAGE'&&!p.carrier);
@@ -422,7 +407,6 @@
             else if(this.role==='OFFICE'){ctx.fillStyle='#333';ctx.fillRect(-w/2+3,-h/2-3,6,2);}
             else if(this.role==='BUILDER'&&this.state==='DELIVERING'){ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2-2,-h/2,2,6);ctx.fillRect(w/2,-h/2,2,6);}
             
-            // [도구 그리기: 휴가중 아닐 때만]
             if (this.role === 'BUILDER' && !this.isPaused) {
                 if (this.busyState === 'CLEAN') {
                     ctx.save(); ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02)*8, 18); ctx.stroke();
@@ -490,7 +474,16 @@
         fairies.forEach((f, i) => {
             if (f.role === 'OFFICE') {
                 const deskX = f.seatX; const deskY = f.seatY;
-                ctx.fillStyle = '#bcaaa4'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#444'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25); ctx.fillStyle = '#dcdde1'; ctx.fillRect(deskX - 13, deskY - 18, 26, 20);
+                ctx.fillStyle = '#bcaaa4'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#444'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25);
+                
+                // [수정됨] 모니터 알록달록 효과 + 완성시 발광
+                const hue = (monitorHueOffset + i * 10) % 360;
+                const saturation = isLogoComplete ? '100%' : '70%';
+                const lightness = isLogoComplete ? '60%' : '80%';
+                ctx.fillStyle = `hsl(${hue}, ${saturation}, ${lightness})`;
+                if(isLogoComplete) { ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 15; }
+                ctx.fillRect(deskX - 13, deskY - 18, 26, 20);
+                ctx.shadowBlur = 0;
             }
         });
         
@@ -501,7 +494,28 @@
         const now = Date.now(); if (now - lastDropTime > CONFIG.dropInterval) { const p = particles.find(p => p.state === 'WAITING'); if (p) { p.state = 'FALLING'; lastDropTime = now; } }
         ctx.clearRect(0, 0, canvas.width, canvas.height); drawEnvironment(); fairies.forEach(f => { f.update(); f.draw(); }); particles.forEach(p => { p.update(); p.draw(); });
         if (hoveredFairy) { hoveredFairy.drawBubble(); canvas.style.cursor = 'pointer'; } else { canvas.style.cursor = 'default'; }
-        ctx.save(); ctx.globalAlpha = 0.05; ctx.fillStyle = '#000'; ctx.font = CONFIG.font; ctx.textAlign='center'; ctx.fillText(CONFIG.text, canvas.width/2, canvas.height/2); ctx.restore();
+        
+        // [추가됨] 로고 완성 체크 및 효과
+        const placedCount = particles.filter(p => p.state === 'PLACED').length;
+        isLogoComplete = (placedCount === particles.length && particles.length > 0);
+        monitorHueOffset += isLogoComplete ? 5 : 1; // 완성되면 더 빠르게 색상 변경
+
+        ctx.save(); 
+        if (isLogoComplete) {
+             // 완성시 무지개 발광 효과
+             const hue = (monitorHueOffset * 2) % 360;
+             ctx.globalAlpha = 0.8;
+             ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+             ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+             ctx.shadowBlur = 30;
+        } else {
+             // 미완성시 기존 희미한 가이드
+             ctx.globalAlpha = 0.05;
+             ctx.fillStyle = '#000';
+        }
+        ctx.font = CONFIG.font; ctx.textAlign='center'; ctx.fillText(CONFIG.text, canvas.width/2, canvas.height/2); 
+        ctx.restore();
+
         requestAnimationFrame(animate);
     }
     
@@ -583,4 +597,3 @@
 </script>
 </body>
 </html>
-
