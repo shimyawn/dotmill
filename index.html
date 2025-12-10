@@ -38,6 +38,20 @@
         }
         #view-all-btn:hover { background: #0056b3; transform: scale(1.05); }
 
+        /* [추가됨] 오디오 토글 버튼 */
+        #audio-btn {
+            position: absolute; top: 195px; right: 30px; /* 전체보기 버튼 아래 */
+            width: 40px; height: 40px;
+            background: rgba(44, 62, 80, 0.7); /* 반투명 */
+            color: white; border: none; border-radius: 50%;
+            cursor: pointer; z-index: 20;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background 0.2s;
+        }
+        #audio-btn:hover { background: #0056b3; transform: scale(1.1); }
+
         /* 커스텀 알림창 */
         #custom-alert {
             display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
@@ -91,7 +105,7 @@
         @keyframes popIn { from { opacity: 0; transform: translate(-50%, -40%) scale(0.8); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -40%); } 10% { opacity: 1; transform: translate(-50%, -50%); } 90% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -60%); } }
 
-        /* ★★★ [모바일 전용 스타일 최종] ★★★ */
+        /* [모바일 전용 스타일] */
         @media (max-width: 768px) {
             #guide-text {
                 display: block; top: 10px; left: 50%; right: auto; transform: translateX(-50%); width: 90%; text-align: center;
@@ -103,6 +117,12 @@
             #view-all-btn {
                 top: auto; bottom: 80px; right: auto; left: 50%; transform: translateX(-50%);
                 padding: 5px 12px; font-size: 0.75rem; background: #2c3e50; width: auto; white-space: nowrap; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            }
+
+            /* 모바일에서 오디오 버튼 위치: 우측 상단 (안내문구 옆) */
+            #audio-btn {
+                top: 20px; right: 20px; 
+                width: 36px; height: 36px; font-size: 1rem;
             }
 
             #ui { top: 85px; left: 50%; transform: translateX(-50%); width: 90%; text-align: center; }
@@ -139,6 +159,8 @@
 
     <button id="view-all-btn">📜 전체 메시지 보기</button>
 
+    <button id="audio-btn">🔇</button>
+
     <div id="custom-alert">
         <span id="alert-check">✅</span>
         <h3>전송 완료!</h3>
@@ -166,12 +188,12 @@
 <script>
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwImwxFykweItZzd9OEJpssDeDKmdolp3icDNPZQFJ2-9hwYbrKyes_HY38Kq0dPnKS2g/exec";
 
-    // --- [사운드 객체 안전 생성] ---
+    // --- [사운드 객체] ---
     const audioFiles = {};
     const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset'];
+    let isBgmOn = false; // BGM 상태 플래그
     
     soundNames.forEach(name => {
-        // bgm만 wav, 나머지는 mp3
         const ext = name === 'bgm' ? 'wav' : 'mp3';
         const audio = new Audio(`sounds/${name}.${ext}`);
         
@@ -185,16 +207,27 @@
         audioFiles[name] = audio;
     });
 
-    let isBgmStarted = false;
-    function startBgm() {
-        if (!isBgmStarted) {
-            audioFiles['bgm'].play().catch(e => console.log("BGM 대기 중"));
-            isBgmStarted = true;
+    // 오디오 버튼 제어
+    const audioBtn = document.getElementById('audio-btn');
+    audioBtn.addEventListener('click', () => {
+        if (isBgmOn) {
+            // 끄기
+            audioFiles['bgm'].pause();
+            audioBtn.innerText = '🔇';
+            isBgmOn = false;
+        } else {
+            // 켜기
+            audioFiles['bgm'].play().catch(e => console.log("재생 실패"));
+            audioBtn.innerText = '🔊';
+            isBgmOn = true;
         }
-    }
+    });
     
     function playSound(name) {
-        if(audioFiles[name]) {
+        // 효과음은 버튼이 켜져있거나(BGM ON) 상관없이 나게 할 수도 있지만,
+        // 보통 소리를 켰을 때만 나는 게 자연스러우므로 isBgmOn 체크를 할 수도 있습니다.
+        // 여기서는 효과음은 항상 나게 하되, 사용자가 명시적으로 켰을 때만 나게 하려면 아래 if문 추가.
+        if (isBgmOn && audioFiles[name]) {
             audioFiles[name].currentTime = 0;
             audioFiles[name].play().catch(e => {});
         }
@@ -216,7 +249,6 @@
     }
 
     async function sendMessage() {
-        startBgm(); 
         const name = nameInput.value.trim() || '익명';
         const text = msgInput.value.trim();
         
@@ -253,7 +285,6 @@
     }
 
     async function fetchAllMessages() {
-        startBgm();
         msgList.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL);
@@ -289,11 +320,8 @@
 <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    
-    // 모바일 감지
     const isMobile = window.innerWidth <= 768;
 
-    // 모바일이면 토스트 띄우기
     if (isMobile) {
         const toast = document.getElementById('pc-toast');
         toast.style.display = 'block';
@@ -302,7 +330,7 @@
 
     const CONFIG = { 
         text: 'dotmill', 
-        font: '900 120px Arial', // 모바일에서도 120px 유지
+        font: '900 120px Arial', 
         pixelSize: 5, 
         builderCount: 15, 
         engineerCount: 3, 
@@ -329,14 +357,9 @@
             this.isPaused=false; this.pauseTimer=null; this.busyState='NONE'; this.busyTimer=Math.random()*500;
             this.busyTargetX=0; this.busyTargetY=0; this.seatX=0; this.seatY=0;
             this.assignedMessage = null; this.assignmentTime = 0; 
-
             if(role==='ENGINEER'){this.x=zones.beltStart.x+(zones.beltEnd.x-zones.beltStart.x)*0.5;this.y=zones.beltStart.y+30;}
             else if(role==='OFFICE'){ const c=Math.ceil(CONFIG.officeCount/2),r=Math.floor(idx/c),cl=idx%c,dw=60,dh=60,tw=c*dw,sx=(canvas.width-tw)/2+30,sy=zones.office.y+50; this.seatX=sx+cl*dw;this.seatY=sy+r*dh;this.x=this.seatX;this.y=this.seatY;this.busyState='TYPING';} 
-            else if(role==='FOREMAN'){
-                // [확인] 감독관 원래 자리
-                this.x = canvas.width/2 - 250;
-                this.y = canvas.height/2 - 20;
-            }
+            else if(role==='FOREMAN'){ this.x = canvas.width/2 - 250; this.y = canvas.height/2 - 20; }
         }
         
         giveVacation() { 
@@ -385,31 +408,22 @@
             } else { ctx.shadowBlur = 0; }
             if(!this.isPaused && (this.busyState==='HAMMER'||(this.role==='OFFICE'&&this.busyState==='TYPING'))) ctx.translate(0,Math.sin(Date.now()*0.05));
             if (indicatorColor) { ctx.fillStyle = indicatorColor; ctx.beginPath(); ctx.arc(0, -18, 3.5, 0, Math.PI*2); ctx.fill(); }
-            
             const w=12,h=20; ctx.fillStyle='#333';ctx.fillRect(-w/2,0,w,h/2); ctx.fillStyle=drawShirtColor;ctx.fillRect(-w/2,-h/2,w,h/2); ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2+2,-h/2-6,8,8);
             if(this.role==='FOREMAN'){ctx.fillStyle='#ffcc00';ctx.fillRect(-w/2,-h/2-8,w,4);ctx.strokeStyle='red';ctx.beginPath();ctx.moveTo(w/2,-h/2);ctx.lineTo(w/2+10,-h/2-5);ctx.stroke();}
             else if(this.role==='ENGINEER'){ctx.save();ctx.translate(w/2,0);ctx.rotate(Math.sin(this.animFrame)*0.5);ctx.fillStyle='#888';ctx.fillRect(0,-2,10,4);ctx.restore();}
             else if(this.role==='OFFICE'){ctx.fillStyle='#333';ctx.fillRect(-w/2+3,-h/2-3,6,2);}
             else if(this.role==='BUILDER'&&this.state==='DELIVERING'){ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2-2,-h/2,2,6);ctx.fillRect(w/2,-h/2,2,6);}
             
-            // [확인] 도구 그리기: 휴가중이 아닐 때만(!this.isPaused)
+            // [도구 그리기: 휴가중 아닐 때만]
             if (this.role === 'BUILDER' && !this.isPaused) {
                 if (this.busyState === 'CLEAN') {
-                    ctx.save();
-                    ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; 
-                    ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02)*8, 18); ctx.stroke();
-                    ctx.fillStyle='#d7ccc8'; ctx.beginPath(); ctx.arc(4 + Math.sin(Date.now()*0.02)*8, 18, 3, 0, Math.PI); ctx.fill();
-                    ctx.restore();
+                    ctx.save(); ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02)*8, 18); ctx.stroke();
+                    ctx.fillStyle='#d7ccc8'; ctx.beginPath(); ctx.arc(4 + Math.sin(Date.now()*0.02)*8, 18, 3, 0, Math.PI); ctx.fill(); ctx.restore();
                 } else if (this.busyState === 'HAMMER') {
-                    ctx.save();
-                    ctx.translate(6, 0); 
-                    ctx.rotate(Math.sin(Date.now() * 0.2) * 0.8);
-                    ctx.fillStyle = '#5d4037'; ctx.fillRect(0, -10, 2, 12); 
-                    ctx.fillStyle = '#555'; ctx.fillRect(-3, -12, 8, 4); 
-                    ctx.restore();
+                    ctx.save(); ctx.translate(6, 0); ctx.rotate(Math.sin(Date.now() * 0.2) * 0.8);
+                    ctx.fillStyle = '#5d4037'; ctx.fillRect(0, -10, 2, 12); ctx.fillStyle = '#555'; ctx.fillRect(-3, -12, 8, 4); ctx.restore();
                 }
             }
-
             ctx.restore();
         }
         drawBubble() {
@@ -505,7 +519,9 @@
     // 모바일 터치 대응 (탭 시 말풍선 표시 or 휴가)
     canvas.addEventListener('touchstart', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay')) return;
-        startBgm(); 
+        
+        // 버튼 누르지 않고 화면 터치해도 소리 재생 안 함 (정책상) -> 사용자가 버튼 누르게 유도
+        
         const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
         let touchedFairy = false;
         fairies.forEach(f => {
@@ -532,8 +548,7 @@
 
     // PC 마우스
     window.addEventListener('mousedown', (e) => {
-        startBgm(); 
-        if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#list-modal') || e.target.closest('#view-all-btn')) return;
+        if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#list-modal') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
         let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); if (clickedFairy) return;
         if (cx > canvas.width/2 - 250 && cx < canvas.width/2 + 250 && cy > canvas.height/2 - 80 && cy < canvas.height/2 + 80) { 
