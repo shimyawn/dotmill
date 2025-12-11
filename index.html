@@ -346,7 +346,7 @@
 
 <script>
     // [중요] 여기에 새로 배포하신 Google Apps Script의 URL을 넣어주세요.
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVUstSVxUqWBzLgxCoNUqRE02DVGa8dbjWFl6opbPqiqokuCjn9dEEf9qn6jrrW09QFA/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqwO64o1ozDYp5Gbw8NP3W0Xu4eFpEyHRoaXDXXrYlnHg8AKXR54hrlUjxtE5ZCfQ6lw/exec";
 
     // --- [사운드] ---
     const audioFiles = {};
@@ -541,27 +541,8 @@
         const styleData = JSON.stringify(currentStyle);
         const finalPayload = { name: receiver, text: text, style: styleData };
 
-        // [중요] 재시도 로직이 포함된 전송 함수
-        const performFetch = async (retries = 3, delay = 1500) => {
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify(finalPayload) 
-                });
-            } catch (err) {
-                if (retries > 1) {
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    return performFetch(retries - 1, delay * 2);
-                } else {
-                    throw err;
-                }
-            }
-        };
-
         try {
-            await performFetch();
+            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalPayload) });
             
             if (window.distributeSingleMessage) {
                 window.distributeSingleMessage({ 
@@ -572,34 +553,16 @@
             }
             playSound('sent'); showCustomAlert();
             if (!toAllCheck.checked) receiverInput.value = ''; 
-        } catch (error) { 
-            alert("전송에 실패했습니다. (서버 혼잡)"); 
-        } finally { 
-            sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); 
-        }
+        } catch (error) { alert("전송에 실패했습니다."); } finally { sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); }
     }
 
-    // [UPGRADE] 재시도 로직이 포함된 전체 메시지 로드 함수
-    async function fetchAllMessages(retries = 3, delay = 1000) {
-        // 첫 시도일 때만 로딩 표시
-        if (retries === 3) {
-            msgList.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
-        }
-
+    // 전체 메시지 로드 (탭 2)
+    async function renderAllMessages() {
+        const container = document.getElementById('all-msg-list');
+        container.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL); 
-            
-            if (!response.ok) throw new Error("HTTP error");
-            
-            const data = await response.json(); 
-            msgList.innerHTML = ''; 
-            
-            if (!data || data.length === 0) { 
-                msgList.innerHTML = '<div class="empty-msg">메시지 없음</div>'; 
-                return; 
-            }
-            
-            // 데이터 렌더링
+            const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); container.innerHTML = ''; 
+            if (!data || data.length === 0) { container.innerHTML = '<div class="empty-msg">메시지 없음</div>'; return; }
             data.forEach(row => {
                 const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div'); div.className = 'list-item';
@@ -614,18 +577,9 @@
                     displayReceiver = `To. ${displayReceiver}`;
                 }
                 div.innerHTML = `<div class="list-date">${dateStr}</div><div><span class="${receiverClass}">${displayReceiver}</span> <span class="list-text">${displayMsg}</span></div>`;
-                msgList.appendChild(div);
+                container.appendChild(div);
             });
-            
-        } catch (error) { 
-            console.warn(`Fetch failed. Retries left: ${retries - 1}`);
-            if (retries > 1) {
-                // 실패 시 잠시 대기 후 재시도 (재귀 호출)
-                setTimeout(() => fetchAllMessages(retries - 1, delay * 1.5), delay);
-            } else {
-                msgList.innerHTML = '<div class="empty-msg" style="color:#ef4444">접속자가 많아 불러오기에 실패했습니다.<br>잠시 후 다시 시도해주세요. 😵</div>'; 
-            }
-        }
+        } catch (error) { container.innerHTML = '<div class="empty-msg">불러오기 실패!</div>'; }
     }
 
     class Snowflake {
@@ -1583,14 +1537,9 @@
     }
     
     // ... 나머지 이벤트 리스너들 (생략하지 않고 기존 코드 유지) ...
-    
-    // [UPGRADE] 초기 로드에도 재시도 로직 적용
-    async function loadInitialMessages(retries = 3, delay = 1000) {
+    async function loadInitialMessages() {
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL);
-            
-            if (!response.ok) throw new Error("HTTP Error");
-            
             const data = await response.json(); 
             if (data && data.length > 0) {
                 const recent10 = [...data].reverse().slice(0, 10);
@@ -1607,14 +1556,7 @@
                     }
                 });
             }
-        } catch (e) { 
-            console.warn(`Initial load failed. Retries left: ${retries-1}`);
-            if (retries > 1) {
-                setTimeout(() => loadInitialMessages(retries - 1, delay * 1.5), delay);
-            } else {
-                console.error("Initial messages completely failed to load.");
-            }
-        }
+        } catch (e) { console.error("Initial fetch failed:", e); }
     }
 
     canvas.addEventListener('touchstart', (e) => {
