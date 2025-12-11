@@ -54,7 +54,7 @@
         .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .dot.green { background: #00e676; }
         .dot.blue { background: #2979ff; }
-        .dot.yellow { background: #ef4444; } /* 빨간 우편함이지만 가독성 위해 텍스트 색상 계열 유지 */
+        .dot.yellow { background: #ef4444; } 
         .dot.gray { background: #64748b; }
         
         .warning-txt { color: #ea580c; font-weight: 600; background: #fff7ed; padding: 8px; border-radius: 8px; margin-top: 5px; font-size: 0.75rem; }
@@ -81,7 +81,7 @@
         .yellow-txt { color: #ef4444; font-weight: 700; } 
         .gray-txt { color: #555; font-weight: 700; }
 
-        /* 안내 멘트 (우측 상단) - 클릭 가능하도록 pointer-events: auto */
+        /* 안내 멘트 (우측 상단) */
         #guide-text {
             position: absolute; top: 30px; right: 30px; text-align: right; color: #444; pointer-events: auto; z-index: 10;
             background: rgba(255,255,255,0.9); padding: 18px 22px; border-radius: 16px; backdrop-filter: blur(8px); 
@@ -108,12 +108,41 @@
         #custom-alert h3 { margin: 0 0 10px 0; color: #2c3e50; font-weight: 700; font-size: 1.3rem; }
         #pc-toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(30, 41, 59, 0.9); color: white; padding: 12px 24px; border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 300; text-align: center; font-size: 0.9rem; pointer-events: none; animation: fadeInOut 2.5s ease forwards; }
 
+        /* [NEW] 로딩 오버레이 & 서버 에러 모달 */
+        #loading-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.85); z-index: 2000;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top: 5px solid #0ea5e9;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        #loading-text { font-size: 1.1rem; font-weight: 700; color: #334155; text-align: center; line-height: 1.5; }
+        
+        #server-error-modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 30px 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            z-index: 2100; text-align: center; border: 1px solid #f1f1f1; flex-direction: column; align-items: center;
+            width: 85%; max-width: 360px; animation: popIn 0.3s ease;
+        }
+        #server-error-modal h3 { margin: 0 0 10px 0; color: #ef4444; font-size: 1.3rem; }
+        #server-error-modal p { color: #475569; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; }
+        #server-error-modal .sub-text { font-size: 0.85rem; color: #94a3b8; margin-top: -10px; }
+        #server-error-modal button { 
+            background: #1e293b; color: white; border: none; padding: 10px 20px; border-radius: 12px;
+            font-weight: 700; cursor: pointer; transition: transform 0.1s; font-family: 'Pretendard';
+        }
+        #server-error-modal button:hover { background: #334155; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+
         /* 통합 모달 스타일 */
         .modal-window { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 600px; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); z-index: 100; flex-direction: column; overflow: hidden; border: 1px solid #f1f1f1; animation: fadeIn 0.3s ease; max-width: 90%; max-height: 90%; }
         
         .modal-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative;}
         
-        /* 메인 탭 버튼 */
         .main-tabs { display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
         .tab-btn {
             border: none; background: transparent; padding: 8px 16px; border-radius: 8px;
@@ -128,7 +157,6 @@
         .view-toggle label.active { background: white; color: #0ea5e9; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .close-modal-btn { cursor: pointer; font-size: 1.8rem; color: #94a3b8; line-height: 1; margin-left: 10px; }
         
-        /* 탭 컨텐츠 영역 */
         .tab-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
 
         .msg-list-container { flex: 1; overflow-y: auto; padding: 0; background: #f8fafc; }
@@ -148,7 +176,6 @@
         #my-msg-list-container { flex: 1; overflow-y: auto; background: #f8fafc; display: none; }
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 90; backdrop-filter: blur(4px); }
 
-        /* 입력바 스타일 */
         #input-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 620px; background: rgba(255, 255, 255, 0.95); padding: 8px 12px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 8px; z-index: 30; border: 1px solid #e2e8f0; backdrop-filter: blur(10px); }
         
         .to-all-wrapper { display: flex; align-items: center; white-space: nowrap; font-size: 14px; font-weight: 600; color: #475569; margin-right: 2px; cursor: pointer; user-select: none; }
@@ -164,7 +191,6 @@
         #send-btn:active { transform: scale(0.95); }
         #send-btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
 
-        /* 스타일 버튼 그룹 */
         #style-group { position: relative; display: flex; align-items: center; }
         #style-toggle-btn {
             width: 42px; height: 42px; border-radius: 50%; border: 1px solid #cbd5e1; background: #fff;
@@ -191,7 +217,6 @@
         }
         .style-opt-btn:hover { background: #f1f5f9; }
         
-        /* 스타일 인디케이터 */
         .style-indicator {
             position: absolute; bottom: -2px; right: -2px;
             width: 16px; height: 16px; border-radius: 50%;
@@ -274,6 +299,20 @@
         <p>익명으로 메시지가 무사히 전달되었습니다! 📨</p>
     </div>
 
+    <!-- 로딩 오버레이 -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text">방앗간 돌리는 중...<br>조금만 기다려주세요 🐹</div>
+    </div>
+
+    <!-- 서버 폭주 에러 모달 -->
+    <div id="server-error-modal">
+        <h3>방앗간이 멈췄어요 💦</h3>
+        <p>너무 많은 사람이 접속해서<br>방앗간이 잠시 멈췄어요... 😵</p>
+        <p class="sub-text">5분 후 새로고침해서 다시 시도해주세요!</p>
+        <button onclick="location.reload()">새로고침 🔄</button>
+    </div>
+
     <div id="pc-toast">
         PC에서 접속하시면 최적화된 경험을 하실 수 있습니다 💻
     </div>
@@ -351,7 +390,7 @@
 
 <script>
     // [중요] 여기에 새로 배포하신 Google Apps Script의 URL을 넣어주세요.
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqwO64o1ozDYp5Gbw8NP3W0Xu4eFpEyHRoaXDXXrYlnHg8AKXR54hrlUjxtE5ZCfQ6lw/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVUstSVxUqWBzLgxCoNUqRE02DVGa8dbjWFl6opbPqiqokuCjn9dEEf9qn6jrrW09QFA/exec";
 
     // --- [사운드] ---
     const audioFiles = {};
@@ -365,7 +404,6 @@
         audioFiles[name] = audio;
     });
 
-    // 변경된 오디오 버튼 ID 적용
     const audioBtn = document.getElementById('btn-audio');
     audioBtn.addEventListener('click', () => {
         if (isBgmOn) {
@@ -384,14 +422,13 @@
     const msgInput = document.getElementById('msg-input');
     const sendBtn = document.getElementById('send-btn');
     const toAllCheck = document.getElementById('to-all-check'); 
-    
-    // 모달 관련 요소
     const myMsgModal = document.getElementById('my-msg-modal');
     const overlay = document.getElementById('modal-overlay');
     const closeBtns = document.querySelectorAll('.close-modal-btn');
-    
     const myNameInput = document.getElementById('my-name-input');
     const customAlert = document.getElementById('custom-alert');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const serverErrorModal = document.getElementById('server-error-modal');
 
     // [커스텀 스타일 데이터]
     const CUSTOM_SHIRT_COLORS = [
@@ -436,7 +473,6 @@
         }
     }
 
-    // [통합 모달 탭 관리]
     let currentMailboxTab = 'MY'; // 'MY' or 'ALL'
 
     window.setMailboxTab = (tab) => {
@@ -465,7 +501,6 @@
         }
     }
 
-    // [내 우편함 뷰 모드 관리]
     let currentViewMode = 'scene';
     const mbListContainer = document.getElementById('my-msg-list-container');
     const mbCanvasContainer = document.getElementById('mailbox-canvas-container');
@@ -525,6 +560,20 @@
         customAlert.style.display = 'block'; setTimeout(() => { customAlert.style.display = 'none'; }, 2500);
     }
 
+    function showLoading() {
+        loadingOverlay.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        loadingOverlay.style.display = 'none';
+    }
+
+    function showServerError() {
+        loadingOverlay.style.display = 'none';
+        serverErrorModal.style.display = 'flex';
+        overlay.style.display = 'block';
+    }
+
     async function sendMessage() {
         let receiver = '';
         const rawName = receiverInput.value.trim();
@@ -546,8 +595,31 @@
         const styleData = JSON.stringify(currentStyle);
         const finalPayload = { name: receiver, text: text, style: styleData };
 
+        showLoading(); // [UI] 로딩 시작
+
+        const performFetch = async (retries = 3, delay = 1500) => {
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    cache: 'no-cache', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify(finalPayload) 
+                });
+            } catch (err) {
+                console.error("Send Error:", err);
+                if (retries > 1) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return performFetch(retries - 1, delay * 2);
+                } else {
+                    throw err;
+                }
+            }
+        };
+
         try {
-            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalPayload) });
+            await performFetch();
+            hideLoading(); // [UI] 로딩 종료
             
             if (window.distributeSingleMessage) {
                 window.distributeSingleMessage({ 
@@ -558,10 +630,14 @@
             }
             playSound('sent'); showCustomAlert();
             if (!toAllCheck.checked) receiverInput.value = ''; 
-        } catch (error) { alert("전송에 실패했습니다."); } finally { sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); }
+        } catch (error) { 
+            console.error("Final failure:", error);
+            showServerError(); // [UI] 최종 실패 시 에러 모달
+        } finally { 
+            sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); 
+        }
     }
 
-    // 전체 메시지 로드 (탭 2)
     async function renderAllMessages() {
         const container = document.getElementById('all-msg-list');
         container.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
@@ -603,7 +679,6 @@
         }
     }
 
-    // --- 우편함 내부 댄서 ---
     class PartyFairy {
         constructor(msg, isPrivate, w, h) {
             this.msg = msg; 
@@ -730,29 +805,65 @@
 
             ctx.font = 'bold 12px "Pretendard", sans-serif';
             const tm = ctx.measureText(text);
-            const w = tm.width + 20;
-            const h = 30;
+            
+            // Measure name
+            ctx.font = '500 12px "Pretendard"'; 
+            let displayName = this.msg.name;
+            if (displayName === 'ALL') displayName = '모두에게';
+            else displayName = `To. ${displayName}`;
+            
+            const nm = ctx.measureText(displayName);
+            
+            const w = Math.min(Math.max(tm.width, nm.width) + 24, 220); 
+            
+            const words = this.msg.text.split('');
+            let lines = [];
+            let currentLine = words[0];
+            
+            ctx.font = 'bold 12px "Pretendard", sans-serif';
+            
+            for (let i = 1; i < words.length; i++) {
+                const width = ctx.measureText(currentLine + words[i]).width;
+                if (width < 200) {
+                    currentLine += words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            const h = lines.length * 18 + 30; 
 
-            ctx.save();
-            ctx.translate(0, -45); 
+            let bubbleX = 0;
+            // Prevent going off screen (mbCanvas width is safer to check against than main canvas.width)
+            if (this.x - w/2 < 10) bubbleX = 10 - (this.x - w/2);
+            if (this.x + w/2 > mbCanvas.width - 10) bubbleX = (mbCanvas.width - 10) - (this.x + w/2);
             
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.strokeStyle = this.isPrivate ? 'rgba(255, 105, 180, 0.8)' : 'rgba(100, 200, 255, 0.5)';
-            ctx.lineWidth = 1.5;
+            ctx.translate(bubbleX, 0);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'; ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 10;
+            ctx.beginPath(); ctx.roundRect(-w/2, -h, w, h, 12); ctx.fill();
             
-            ctx.beginPath(); ctx.roundRect(-w/2, -h, w, h, 10); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-4, 6); ctx.lineTo(4, 6); ctx.closePath();
-            ctx.fillStyle = this.isPrivate ? 'rgba(255, 105, 180, 0.8)' : 'rgba(100, 200, 255, 0.5)';
+            ctx.beginPath(); 
+            ctx.moveTo(-bubbleX, 0); 
+            ctx.lineTo(-bubbleX - 6, -6); 
+            ctx.lineTo(-bubbleX + 6, -6); 
             ctx.fill();
 
-            ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center'; ctx.fillText(text, 0, -10);
+            ctx.shadowBlur = 0; ctx.fillStyle = '#334155'; ctx.textAlign = 'center'; 
             
-            ctx.font = 'bold 11px "Pretendard", sans-serif';
-            if (!this.isPrivate) {
-                ctx.fillStyle = '#67e8f9'; ctx.fillText('To. 모두에게', 0, -h - 6);
+            lines.forEach((line, i) => {
+                ctx.fillText(line, 0, -h + 20 + (i * 18));
+            });
+
+            ctx.font = '500 12px "Pretendard"'; 
+            
+            if (this.msg.name === 'ALL') {
+                ctx.fillStyle = '#00e676';
             } else {
-                ctx.fillStyle = '#ff69b4'; ctx.fillText(`To. ${this.msg.name}`, 0, -h - 6);
+                ctx.fillStyle = '#ec4899';
             }
+            ctx.fillText(displayName, 0, -10);
             ctx.restore();
         }
     }
@@ -821,7 +932,6 @@
                 const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div'); div.className = 'list-item';
                 
-                // [변경] row[2]는 메시지 텍스트
                 let displayMsg = row[2] || "";
 
                 let prefix = (row[1] === 'ALL') ? '<span style="color:#00e676; font-size:0.8rem; margin-right:5px; font-weight:bold;">[전체]</span>' : '<span style="color:#ec4899; font-size:0.8rem; margin-right:5px; font-weight:bold;">[나에게]</span>';
@@ -834,7 +944,6 @@
             displayMessages.forEach(row => {
                 const isPrivate = (row[1] !== 'ALL');
                 
-                // [변경] row[2]는 메시지, row[3]은 설정값
                 let text = row[2] || "";
                 let styleJson = row[3];
                 let style = { hair: 0, shirt: 0, acc: 0 };
@@ -892,18 +1001,11 @@
         waitLoop();
     };
     window.addEventListener('resize', () => { if (myMsgModal.style.display === 'flex') { resizeMailboxCanvas(); } }); 
-</script>
 
-<script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const isMobile = window.innerWidth <= 768;
-
-    if (isMobile) {
-        const toast = document.getElementById('pc-toast');
-        toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 2500);
-    }
-
+    
+    // Config
     const CONFIG = { 
         text: 'dotmill', font: '900 120px "Pretendard", Arial', pixelSize: 5, 
         builderCount: 15, engineerCount: 3, officeCount: 50, 
@@ -929,33 +1031,30 @@
     let clickCount = 0;
     let clickTimer = null;
 
-    // 일시정지 토글 함수
+    // [New Objects for Night Mode]
+    let mainSnowflakes = [];
+    let santaObj = { x: -200, y: 100, active: false };
+
     window.togglePause = () => {
         isGamePaused = !isGamePaused;
         const btn = document.getElementById('btn-pause');
         btn.innerText = isGamePaused ? '▶' : '⏸';
     };
 
-    // 속도 조절 함수 (1x -> 2x -> 4x -> 8x -> 1x)
     window.toggleSpeed = () => {
         if (speedLevel === 1) speedLevel = 2;
         else if (speedLevel === 2) speedLevel = 4;
         else if (speedLevel === 4) speedLevel = 8;
         else speedLevel = 1;
-        
-        // 실제 게임 속도는 (배수 * 기본보정값)
         GAME_SPEED = speedLevel * BASE_SPEED_FACTOR;
-        
         document.getElementById('btn-speed').innerText = speedLevel + 'x';
     };
 
-    // 도움말 토글 함수
     let isHelpOpen = false;
     window.toggleHelp = () => {
         isHelpOpen = !isHelpOpen;
         const btn = document.getElementById('btn-help');
         const popup = document.getElementById('help-popup');
-        
         if (isHelpOpen) {
             btn.classList.add('active');
             popup.style.display = 'block';
@@ -965,7 +1064,6 @@
         }
     };
 
-    // 이스터 에그 핸들러
     window.handleGuideClick = () => {
         const guideText = document.getElementById('guide-text');
         
@@ -1030,7 +1128,7 @@
     // 리셋 함수 추가
     window.resetSimulation = () => {
         particles.forEach(p => { 
-            if (p.state === 'PLACED' || p.state === 'ON_BELT' || p.state === 'IN_STORAGE' || p.state === 'CARRIED' || p.state === 'DELIVERING' || p.state === 'FALLING') {
+            if (p.state === 'PLACED' || p.state === 'ON_BELT' || p.state === 'IN_STORAGE' || p.state === 'CARRIED' || p.state === 'DELIVERING' || p.state === 'FALLING' || p.state === 'FALLING_FROM_TEXT') {
                 p.reset(); 
             }
         });
@@ -1040,10 +1138,16 @@
                     f.targetItem.reset(); 
                     f.targetItem = null; 
                 } 
+                // [NEW] 만약 눈 치우기 모드였다면 IDLE로 복귀
+                if (f.busyState === 'SWEEPING' || f.busyState === 'MOVING_TO_SWEEP') {
+                    f.busyState = 'NONE'; // or whatever default busy logic uses
+                }
                 f.state = 'IDLE'; 
             } 
         });
         isLogoComplete = false;
+        mainSnowflakes = [];
+        santaObj.active = false;
         playSound('reset');
     };
 
@@ -1055,8 +1159,140 @@
         }, 7000); // 30초 -> 7초
     }
 
+    // [FIXED] MainSnowflake 클래스 복원 (메인 화면 로고 완성 시 눈 내림 효과용)
+    class MainSnowflake {
+        constructor(w, h) {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.size = Math.random() * 3 + 1;
+            this.speed = Math.random() * 2 + 1;
+            this.opacity = Math.random() * 0.7 + 0.3;
+        }
+        update(w, h, speed) {
+            this.y += this.speed * speed;
+            this.x += Math.sin(this.y * 0.02) * 0.5 * speed;
+            if (this.y > h) {
+                this.y = -10;
+                this.x = Math.random() * w;
+            }
+        }
+        draw(ctx) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+            ctx.fillRect(this.x, this.y, this.size, this.size); // Pixel style
+        }
+    }
+
+    // [FIXED] drawPixelSanta 함수 복원
+    function drawPixelSanta(ctx, x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        const scale = 3;
+        ctx.scale(scale, scale);
+
+        // Reindeer
+        ctx.fillStyle = '#8B4513'; // Body
+        ctx.fillRect(0, 5, 8, 5); 
+        ctx.fillRect(0, 10, 2, 4); // Legs
+        ctx.fillRect(6, 10, 2, 4);
+        ctx.fillRect(6, 3, 3, 3); // Head
+        ctx.fillStyle = '#D2691E'; // Antlers
+        ctx.fillRect(7, 1, 1, 2);
+        ctx.fillStyle = 'red'; // Nose
+        ctx.fillRect(9, 4, 1, 1);
+
+        // Sleigh connection
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, 7); ctx.lineTo(-5, 7); ctx.stroke();
+
+        // Sleigh
+        ctx.fillStyle = '#A52A2A';
+        ctx.fillRect(-15, 8, 12, 4);
+        ctx.fillRect(-15, 6, 2, 2);
+        ctx.fillStyle = '#FFD700'; // Runner
+        ctx.fillRect(-16, 12, 14, 1);
+        
+        // Santa
+        ctx.fillStyle = 'red'; // Suit
+        ctx.fillRect(-12, 4, 6, 6);
+        ctx.fillStyle = '#fce4d4'; // Face
+        ctx.fillRect(-11, 2, 4, 3);
+        ctx.fillStyle = 'white'; // Beard
+        ctx.fillRect(-11, 4, 4, 2);
+        ctx.fillStyle = 'red'; // Hat
+        ctx.fillRect(-11, 0, 4, 2);
+
+        ctx.restore();
+    }
+    
+    // [NEW] 반짝이는 텍스트 그리기 함수 (starlight text)
+    function drawStarlightText(ctx, text, x, y) {
+        // 임시 캔버스에 텍스트를 그립니다.
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = 600; // 충분한 크기
+        tempCanvas.height = 100;
+        
+        tempCtx.font = '900 50px "Pretendard", sans-serif';
+        tempCtx.fillStyle = '#fff';
+        tempCtx.textAlign = 'center';
+        tempCtx.textBaseline = 'middle';
+        tempCtx.fillText(text, tempCanvas.width / 2, tempCanvas.height / 2);
+        
+        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+        const data = imageData.data;
+        
+        ctx.save();
+        // 텍스트를 화면 중앙(x,y)에 배치하기 위한 오프셋 계산
+        const offsetX = x - tempCanvas.width / 2;
+        const offsetY = y - tempCanvas.height / 2;
+        
+        // 픽셀 스킵 간격 (너무 촘촘하지 않게)
+        const step = 4; 
+        
+        for (let py = 0; py < tempCanvas.height; py += step) {
+            for (let px = 0; px < tempCanvas.width; px += step) {
+                const index = (py * tempCanvas.width + px) * 4;
+                if (data[index + 3] > 128) { // 알파값이 있으면
+                    // 반짝이는 효과
+                    const twinkle = Math.random() > 0.8 ? 1.5 : 1;
+                    const size = Math.random() * 2 * twinkle;
+                    
+                    // 은/금/흰색 랜덤 색상
+                    const colors = ['#ffffff', '#fffacd', '#ffd700', '#c0c0c0'];
+                    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    ctx.beginPath();
+                    ctx.arc(offsetX + px, offsetY + py, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+        ctx.restore();
+    }
+
     class Particle {
-        constructor(tx,ty,c){this.targetX=tx;this.targetY=ty;this.baseColor=c;this.x=zones.hopper.x+(Math.random()-0.5)*40;this.y=zones.hopper.y-20;this.state='WAITING';this.carrier=null;}
+        constructor(tx,ty,c){
+            this.targetX=tx;
+            this.targetY=ty;
+            this.baseColor=c;
+            this.x=zones.hopper.x+(Math.random()-0.5)*40;
+            this.y=zones.hopper.y-20;
+            this.state='WAITING';
+            this.carrier=null;
+
+            // [NEW] 트리 패턴 색상 미리 지정
+            const rand = Math.random();
+            if (rand < 0.85) {
+                this.treeColor = '#22c55e'; // Green (Tree)
+            } else if (rand < 0.90) {
+                this.treeColor = '#eab308'; // Yellow (Ornament)
+            } else if (rand < 0.95) {
+                this.treeColor = '#ef4444'; // Red (Ornament)
+            } else {
+                this.treeColor = '#854d0e'; // Brown (Branch/Ornament)
+            }
+        }
         update(){
             // 일시정지 시 업데이트 건너뜀
             if (isGamePaused) return;
@@ -1088,7 +1324,25 @@
                 if(Math.abs(dy)<5)this.state='WAITING';
             }
         }
-        draw(){if(this.state==='WAITING')return;ctx.fillStyle=this.baseColor;if(this.state==='PLACED')ctx.fillRect(this.x,this.y,CONFIG.pixelSize,CONFIG.pixelSize);else{ctx.beginPath();ctx.arc(this.x,this.y,CONFIG.pixelSize/2+1,0,Math.PI*2);ctx.fill();}}
+        // [MODIFIED] Draw function to handle glowing particles when logo is complete
+        draw(){
+            if(this.state==='WAITING') return;
+
+            // [CHANGED] 로고 완성 시 트리 패턴 색상 사용
+            if (typeof isLogoComplete !== 'undefined' && isLogoComplete && this.state === 'PLACED') {
+                 ctx.fillStyle = this.treeColor;
+            } else {
+                 ctx.fillStyle = this.baseColor;
+            }
+
+            if(this.state==='PLACED') {
+                ctx.fillRect(this.x,this.y,CONFIG.pixelSize,CONFIG.pixelSize);
+            } else {
+                ctx.beginPath();
+                ctx.arc(this.x,this.y,CONFIG.pixelSize/2+1,0,Math.PI*2);
+                ctx.fill();
+            }
+        }
         reset(){this.state='RETURNING';this.carrier=null;}
     }
 
@@ -1126,9 +1380,38 @@
             // 일시정지 시 애니메이션 프레임 업데이트 중단
             if (!isGamePaused) {
                 this.animFrame += 0.1 * GAME_SPEED; // 애니메이션 속도도 반영
-                if(this.role==='BUILDER') this.updateBuilder(); 
-                else if(this.role==='OFFICE') this.updateOffice(); 
+                
+                // 로고 완성 시 청소 모드 (BUILDER만)
+                if (isLogoComplete && this.role === 'BUILDER') {
+                    this.updateSweeper();
+                } else {
+                    if(this.role==='BUILDER') this.updateBuilder(); 
+                    else if(this.role==='OFFICE') this.updateOffice(); 
+                }
             }
+        }
+        
+        updateSweeper() {
+             // 빗자루질 로직: 랜덤하게 돌아다니며 청소
+             if (this.busyState !== 'SWEEPING' && this.busyState !== 'MOVING_TO_SWEEP') {
+                 this.busyState = 'MOVING_TO_SWEEP';
+                 this.busyTargetX = canvas.width * 0.1 + Math.random() * canvas.width * 0.8;
+                 this.busyTargetY = canvas.height * 0.5 + Math.random() * canvas.height * 0.4;
+             }
+             
+             if (this.busyState === 'MOVING_TO_SWEEP') {
+                 if(this.moveTo(this.busyTargetX, this.busyTargetY)) {
+                     this.busyState = 'SWEEPING';
+                     this.busyTimer = 100 + Math.random() * 100;
+                 }
+             } else if (this.busyState === 'SWEEPING') {
+                 this.busyTimer -= 1 * GAME_SPEED;
+                 if (this.busyTimer <= 0) {
+                     this.busyState = 'MOVING_TO_SWEEP';
+                     this.busyTargetX = canvas.width * 0.1 + Math.random() * canvas.width * 0.8;
+                     this.busyTargetY = canvas.height * 0.5 + Math.random() * canvas.height * 0.4;
+                 }
+             }
         }
 
         updateOffice(){
@@ -1188,6 +1471,23 @@
             this.y+=(dy/d)*moveStep;
             return false;
         }
+        
+        // [FIXED] 빗자루 그리기 메서드 복원
+        drawBroom(ctx) {
+            ctx.save();
+            const angle = Math.sin(Date.now() * 0.01 * GAME_SPEED) * 0.5;
+            ctx.rotate(angle);
+            ctx.fillStyle = '#8d6e63'; // Handle
+            ctx.fillRect(4, -5, 2, 20);
+            ctx.fillStyle = '#fbc02d'; // Bristles
+            ctx.beginPath();
+            ctx.moveTo(3, 15);
+            ctx.lineTo(7, 15);
+            ctx.lineTo(9, 22);
+            ctx.lineTo(1, 22);
+            ctx.fill();
+            ctx.restore();
+        }
 
         draw() {
             ctx.save(); ctx.translate(this.x, this.y);
@@ -1207,7 +1507,7 @@
             
             // 일시정지 아닐 때만 움직임 효과 적용
             const sway = isGamePaused ? 0 : Math.sin(Date.now()*0.05 * GAME_SPEED);
-            if(!this.isPaused && (this.busyState==='HAMMER'||(this.role==='OFFICE'&&this.busyState==='TYPING'))) ctx.translate(0, sway);
+            if(!this.isPaused && (this.busyState==='HAMMER'||(this.role==='OFFICE'&&this.busyState==='TYPING') || this.busyState==='SWEEPING')) ctx.translate(0, sway);
             
             if (indicatorColor) { ctx.fillStyle = indicatorColor; ctx.beginPath(); ctx.arc(0, -18, 3.5, 0, Math.PI*2); ctx.fill(); }
             
@@ -1277,7 +1577,10 @@
             else if(this.role==='OFFICE'){ctx.fillStyle='#333';ctx.fillRect(-w/2+3,-h/2-3,6,2);}
             else if(this.role==='BUILDER'&&this.state==='DELIVERING'){ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2-2,-h/2,2,6);ctx.fillRect(w/2,-h/2,2,6);}
             
-            if (this.role === 'BUILDER' && !this.isPaused) {
+            // 빗자루 그리기 적용
+            if (this.busyState === 'SWEEPING' || this.busyState === 'MOVING_TO_SWEEP') {
+                this.drawBroom(ctx);
+            } else if (this.role === 'BUILDER' && !this.isPaused) {
                 if (this.busyState === 'CLEAN') {
                     ctx.save(); ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02 * GAME_SPEED)*8, 18); ctx.stroke();
                     ctx.fillStyle='#d7ccc8'; ctx.beginPath(); ctx.arc(4 + Math.sin(Date.now()*0.02 * GAME_SPEED)*8, 18, 3, 0, Math.PI); ctx.fill(); ctx.restore();
@@ -1293,11 +1596,44 @@
             const msg = this.assignedMessage;
             ctx.save(); ctx.translate(this.x, this.y - 35);
             ctx.font = 'bold 14px "Pretendard", sans-serif'; const tm = ctx.measureText(msg.text), nm = ctx.measureText(msg.name);
-            const w = Math.max(tm.width, nm.width) + 24, h = 48;
+            const w = Math.min(Math.max(tm.width, nm.width) + 24, 220); 
+            
+            const words = msg.text.split('');
+            let lines = [];
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                const width = ctx.measureText(currentLine + words[i]).width;
+                if (width < 200) {
+                    currentLine += words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            const h = lines.length * 18 + 30; 
+
+            let bubbleX = 0;
+            if (this.x - w/2 < 10) bubbleX = 10 - (this.x - w/2);
+            if (this.x + w/2 > canvas.width - 10) bubbleX = (canvas.width - 10) - (this.x + w/2);
+            
+            ctx.translate(bubbleX, 0);
+
             ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'; ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 10;
             ctx.beginPath(); ctx.roundRect(-w/2, -h, w, h, 12); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-6, -6); ctx.lineTo(6, -6); ctx.fill();
-            ctx.shadowBlur = 0; ctx.fillStyle = '#334155'; ctx.textAlign = 'center'; ctx.fillText(msg.text, 0, -26);
+            
+            ctx.beginPath(); 
+            ctx.moveTo(-bubbleX, 0); 
+            ctx.lineTo(-bubbleX - 6, -6); 
+            ctx.lineTo(-bubbleX + 6, -6); 
+            ctx.fill();
+
+            ctx.shadowBlur = 0; ctx.fillStyle = '#334155'; ctx.textAlign = 'center'; 
+            
+            lines.forEach((line, i) => {
+                ctx.fillText(line, 0, -h + 20 + (i * 18));
+            });
+
             ctx.font = '500 12px "Pretendard"'; ctx.fillStyle = '#64748b'; 
             let displayName = msg.name;
             if (displayName === 'ALL') {
@@ -1331,17 +1667,28 @@
         let target = fairies.find(f => f.assignedMessage === null && isVisible(f));
         if (!target) {
             const visibleFairies = fairies.filter(f => isVisible(f));
-            if (visibleFairies.length > 0) { target = visibleFairies[Math.floor(Math.random() * visibleFairies.length)]; } 
+            if (visibleFairies.length > 0) { target = visibleFairies[Math.floor(Math.random() * visibleFairies.length)]; } 
             else { target = fairies[Math.floor(Math.random() * fairies.length)]; }
         }
-        if (target) { 
-            target.assignedMessage = newMsg; 
+        if (target) { 
+            target.assignedMessage = newMsg; 
             target.assignmentTime = Date.now();
             if(newMsg.style) target.customStyle = newMsg.style;
         }
     };
 
     function drawEnvironment() {
+        if (isLogoComplete) {
+            // [NEW] Night Mode Background
+            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, '#0f172a'); 
+            grad.addColorStop(1, '#1e1b4b');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+             ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        }
+
         ctx.fillStyle = '#999'; ctx.beginPath(); ctx.moveTo(zones.hopper.x - 30, zones.hopper.y - 50); ctx.lineTo(zones.hopper.x + 30, zones.hopper.y - 50); ctx.lineTo(zones.hopper.x + 10, zones.hopper.y); ctx.lineTo(zones.hopper.x - 10, zones.hopper.y); ctx.fill();
         ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 40; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltEnd.x, zones.beltEnd.y); ctx.stroke();
         
@@ -1353,66 +1700,113 @@
         ctx.lineWidth = 5; ctx.strokeStyle = '#64748b'; ctx.beginPath(); ctx.moveTo(zones.beltEnd.x, zones.beltEnd.y); ctx.lineTo(zones.beltEnd.x, canvas.height); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltStart.x, canvas.height); ctx.stroke();
         const lx = canvas.width/2 - 250; const ly = canvas.height/2 + 60; ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - 120); ctx.moveTo(lx + 30, ly); ctx.lineTo(lx + 30, ly - 120); for(let i=0; i<5; i++) { ctx.moveTo(lx, ly - 20 - (i*20)); ctx.lineTo(lx+30, ly - 20 - (i*20)); } ctx.stroke();
         ctx.fillStyle = '#f8fafc'; ctx.fillRect(zones.office.x, zones.office.y, zones.office.w, zones.office.h); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(zones.office.x, canvas.height - 50, zones.office.w, 50);
+        
         fairies.forEach((f, i) => {
             if (f.role === 'OFFICE') {
                 const deskX = f.seatX; const deskY = f.seatY;
-                ctx.fillStyle = '#cbd5e1'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#475569'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25); 
+                ctx.fillStyle = '#cbd5e1'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#475569'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25); 
                 
-                const hue = (monitorHueOffset + i * 10) % 360;
-                const saturation = isLogoComplete ? '100%' : '70%';
-                const lightness = isLogoComplete ? '60%' : '80%';
-                ctx.fillStyle = `hsl(${hue}, ${saturation}, ${lightness})`;
-                if(isLogoComplete) { ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 15; }
+                // [NEW] Warm White/Silver Glow for Logo Complete state
+                if (isLogoComplete) {
+                     const phase = Date.now() * 0.003;
+                     const b = Math.floor(150 + 105 * (Math.sin(phase) + 1) / 2);
+                     ctx.fillStyle = `rgb(255, 255, ${b})`;
+                     ctx.shadowColor = `rgb(255, 255, ${b})`; 
+                     ctx.shadowBlur = 10; 
+                } else {
+                    const hue = (monitorHueOffset + i * 10) % 360;
+                    ctx.fillStyle = `hsl(${hue}, 70%, 80%)`;
+                    ctx.shadowBlur = 0;
+                }
                 ctx.fillRect(deskX - 13, deskY - 18, 26, 20); ctx.shadowBlur = 0;
             }
         });
-        ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 15px "Pretendard", sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
+        ctx.fillStyle = isLogoComplete ? 'rgba(255,255,255,0.5)' : '#94a3b8'; 
+        ctx.font = 'bold 15px "Pretendard", sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
     }
     
     function animate() {
         if (!isGamePaused) {
-            const now = Date.now(); 
-            // 딜레이를 속도에 반비례하게 줄여서 드랍 빈도 조절 (속도 빠르면 더 자주 떨어짐)
-            if (now - lastDropTime > CONFIG.dropInterval / GAME_SPEED) { 
-                const p = particles.find(p => p.state === 'WAITING'); 
-                if (p) { p.state = 'FALLING'; lastDropTime = now; } 
+            const now = Date.now(); 
+            if (now - lastDropTime > CONFIG.dropInterval / GAME_SPEED) { 
+                const p = particles.find(p => p.state === 'WAITING'); 
+                if (p) { p.state = 'FALLING'; lastDropTime = now; } 
             }
         }
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
-        drawEnvironment(); 
+        const placedCount = particles.filter(p => p.state === 'PLACED').length;
+        // [NEW] Logo Completion Trigger
+        if (!isLogoComplete && placedCount > 0 && placedCount === particles.length) {
+            isLogoComplete = true;
+            mainSnowflakes = [];
+            for(let i=0; i<100; i++) mainSnowflakes.push(new MainSnowflake(canvas.width, canvas.height));
+            santaObj.active = true;
+            santaObj.x = -100;
+            santaObj.y = 100;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        drawEnvironment(); 
         
-        fairies.forEach(f => { f.update(); f.draw(); }); 
-        particles.forEach(p => { p.update(); p.draw(); });
+        // [NEW] Draw snow and santa if logo complete
+        if (isLogoComplete) {
+            if (!isGamePaused) {
+                mainSnowflakes.forEach(s => s.update(canvas.width, canvas.height, GAME_SPEED));
+            }
+            mainSnowflakes.forEach(s => s.draw(ctx));
+            
+            if (santaObj.active) {
+                if (!isGamePaused) santaObj.x += 2 * GAME_SPEED;
+                drawPixelSanta(ctx, santaObj.x, santaObj.y);
+                if (santaObj.x > canvas.width + 100) santaObj.x = -100; 
+            }
+
+            drawStarlightText(ctx, "Happy New Year!", canvas.width/2, 150);
+        }
+
+        fairies.forEach(f => { f.update(); f.draw(); }); 
+        
+        // [MODIFIED] Draw Particles (Glow effect when complete)
+        if (isLogoComplete) {
+            ctx.save();
+            const phase = Date.now() * 0.003;
+            // 빛의 색상: White <-> Warm Yellowish (B값만 조절)
+            const b = Math.floor(150 + 105 * (Math.sin(phase) + 1) / 2);
+            ctx.shadowColor = `rgb(255, 255, ${b})`;
+            ctx.shadowBlur = 20 + 10 * Math.sin(phase * 1.5);
+            particles.forEach(p => { p.update(); p.draw(); });
+            ctx.restore();
+        } else {
+             particles.forEach(p => { p.update(); p.draw(); });
+        }
         
         if (hoveredFairy) { hoveredFairy.drawBubble(); canvas.style.cursor = 'pointer'; } else { canvas.style.cursor = 'default'; }
         
-        const placedCount = particles.filter(p => p.state === 'PLACED').length;
-        isLogoComplete = (placedCount === particles.length && particles.length > 0);
-        
         if (!isGamePaused) {
-            monitorHueOffset += (isLogoComplete ? 5 : 1) * GAME_SPEED; 
+            monitorHueOffset += (isLogoComplete ? 5 : 1) * GAME_SPEED; 
         }
 
-        ctx.save(); 
-        if (isLogoComplete) {
-             const hue = (monitorHueOffset * 2) % 360;
-             ctx.globalAlpha = 0.8; ctx.fillStyle = `hsl(${hue}, 100%, 60%)`; ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 30;
-        } else { ctx.globalAlpha = 0.05; ctx.fillStyle = '#000'; }
-        ctx.font = CONFIG.font; ctx.textAlign='center'; ctx.fillText(CONFIG.text, canvas.width/2, canvas.height/2); ctx.restore();
+        // Logo text (guide) disappears when complete
+        if (!isLogoComplete) { 
+            ctx.save();
+            ctx.globalAlpha = 0.05; 
+            ctx.fillStyle = '#000'; 
+            ctx.font = CONFIG.font; 
+            ctx.textAlign='center'; 
+            ctx.fillText(CONFIG.text, canvas.width/2, canvas.height/2); 
+            ctx.restore();
+        }
 
         requestAnimationFrame(animate);
     }
     
+    // Initial Load function definition
     async function loadInitialMessages() {
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL);
             const data = await response.json(); 
             if (data && data.length > 0) {
-                // [수정] 최신순으로 정렬 (뒤에서부터 가져오거나 reverse)
-                // 원본 데이터를 복사([...data])한 뒤 뒤집어서(.reverse()) 최신 10개를 자릅니다(.slice(0, 10))
                 const recent10 = [...data].reverse().slice(0, 10);
-                
                 const shuffledFairies = [...fairies].sort(() => 0.5 - Math.random());
                 recent10.forEach((row, idx) => {
                     if (idx < shuffledFairies.length) {
@@ -1420,9 +1814,7 @@
                         f.assignedMessage = { name: row[1], text: row[2] };
                         f.assignmentTime = Date.now(); 
                         let styleJson = row[3];
-                        if (styleJson) {
-                            try { f.customStyle = JSON.parse(styleJson); } catch(e) {}
-                        }
+                        if (styleJson) { try { f.customStyle = JSON.parse(styleJson); } catch(e) {} }
                     }
                 });
             }
@@ -1432,58 +1824,30 @@
     canvas.addEventListener('touchstart', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn') || e.target.closest('.modal-window')) return;
         const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
-        
-        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
-        
         let touchedFairy = false;
         fairies.forEach(f => {
             if (Math.abs(tx - f.x) < 40 && Math.abs(ty - f.y) < 50) {
                 touchedFairy = true;
-                if (f.assignedMessage) {
-                    hoveredFairy = f; playSound('pop'); setTimeout(() => { hoveredFairy = null; }, 3000);
-                } else { f.giveVacation(); }
+                if (f.assignedMessage) { hoveredFairy = f; playSound('pop'); setTimeout(() => { hoveredFairy = null; }, 3000); } 
+                else { f.giveVacation(); }
             }
         });
-        if (!touchedFairy) {
-            const cx = canvas.width / 2; const cy = canvas.height / 2;
-            if (tx > cx - 200 && tx < cx + 200 && ty > cy - 80 && ty < cy + 80) {
-                // [수정됨] 로고 클릭 초기화 기능 삭제 (이제 리셋 버튼으로만 가능)
-            }
-        }
     }, { passive: false });
 
     window.addEventListener('mousedown', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('.modal-window') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
-        
-        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
-
-        let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); if (clickedFairy) return;
-        if (cx > canvas.width/2 - 250 && cx < canvas.width/2 + 250 && cy > canvas.height/2 - 80 && cy < canvas.height/2 + 80) { 
-            // [수정됨] 로고 클릭 초기화 기능 삭제 (이제 리셋 버튼으로만 가능)
-        }
+        let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); 
     });
 
     let prevHoveredFairy = null; 
     window.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
-        
-        // 커서 포인터 변경 로직 (작업반장 부분 제거)
-
         let closest = null; let minDist = 30; 
         fairies.forEach(f => { const dx = mouseX - f.x; const dy = mouseY - f.y; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < minDist) { minDist = dist; closest = f; } }); 
         hoveredFairy = closest;
-        
-        if (hoveredFairy) {
-            canvas.style.cursor = 'pointer';
-        } else {
-            canvas.style.cursor = 'default';
-        }
-
-        if (closest !== prevHoveredFairy) {
-            if (closest && closest.assignedMessage) { playSound('pop'); }
-            prevHoveredFairy = closest;
-        }
+        if (hoveredFairy) { canvas.style.cursor = 'pointer'; } else { canvas.style.cursor = 'default'; }
+        if (closest !== prevHoveredFairy) { if (closest && closest.assignedMessage) { playSound('pop'); } prevHoveredFairy = closest; }
     });
     
     window.addEventListener('resize', init); 
