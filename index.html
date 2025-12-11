@@ -54,7 +54,7 @@
         .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .dot.green { background: #00e676; }
         .dot.blue { background: #2979ff; }
-        .dot.yellow { background: #ef4444; } 
+        .dot.yellow { background: #ef4444; } /* 빨간 우편함이지만 가독성 위해 텍스트 색상 계열 유지 */
         .dot.gray { background: #64748b; }
         
         .warning-txt { color: #ea580c; font-weight: 600; background: #fff7ed; padding: 8px; border-radius: 8px; margin-top: 5px; font-size: 0.75rem; }
@@ -81,7 +81,7 @@
         .yellow-txt { color: #ef4444; font-weight: 700; } 
         .gray-txt { color: #555; font-weight: 700; }
 
-        /* 안내 멘트 (우측 상단) */
+        /* 안내 멘트 (우측 상단) - 클릭 가능하도록 pointer-events: auto */
         #guide-text {
             position: absolute; top: 30px; right: 30px; text-align: right; color: #444; pointer-events: auto; z-index: 10;
             background: rgba(255,255,255,0.9); padding: 18px 22px; border-radius: 16px; backdrop-filter: blur(8px); 
@@ -113,6 +113,7 @@
         
         .modal-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative;}
         
+        /* 메인 탭 버튼 */
         .main-tabs { display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
         .tab-btn {
             border: none; background: transparent; padding: 8px 16px; border-radius: 8px;
@@ -127,6 +128,7 @@
         .view-toggle label.active { background: white; color: #0ea5e9; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .close-modal-btn { cursor: pointer; font-size: 1.8rem; color: #94a3b8; line-height: 1; margin-left: 10px; }
         
+        /* 탭 컨텐츠 영역 */
         .tab-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
 
         .msg-list-container { flex: 1; overflow-y: auto; padding: 0; background: #f8fafc; }
@@ -146,6 +148,7 @@
         #my-msg-list-container { flex: 1; overflow-y: auto; background: #f8fafc; display: none; }
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 90; backdrop-filter: blur(4px); }
 
+        /* 입력바 스타일 */
         #input-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 620px; background: rgba(255, 255, 255, 0.95); padding: 8px 12px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 8px; z-index: 30; border: 1px solid #e2e8f0; backdrop-filter: blur(10px); }
         
         .to-all-wrapper { display: flex; align-items: center; white-space: nowrap; font-size: 14px; font-weight: 600; color: #475569; margin-right: 2px; cursor: pointer; user-select: none; }
@@ -161,6 +164,7 @@
         #send-btn:active { transform: scale(0.95); }
         #send-btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
 
+        /* 스타일 버튼 그룹 */
         #style-group { position: relative; display: flex; align-items: center; }
         #style-toggle-btn {
             width: 42px; height: 42px; border-radius: 50%; border: 1px solid #cbd5e1; background: #fff;
@@ -187,6 +191,7 @@
         }
         .style-opt-btn:hover { background: #f1f5f9; }
         
+        /* 스타일 인디케이터 */
         .style-indicator {
             position: absolute; bottom: -2px; right: -2px;
             width: 16px; height: 16px; border-radius: 50%;
@@ -752,6 +757,144 @@
         }
     }
 
+    function animateMailbox() {
+        if (myMsgModal.style.display === 'none' || currentViewMode !== 'scene') return; 
+        
+        mbCtx.clearRect(0, 0, mbCanvas.width, mbCanvas.height);
+        
+        const time = Date.now() * 0.0005;
+        const g = mbCtx.createLinearGradient(0, 0, 0, mbCanvas.height);
+        g.addColorStop(0, '#0f172a'); g.addColorStop(1, '#312e81'); 
+        mbCtx.fillStyle = g; mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height);
+
+        mbCtx.save(); mbCtx.globalCompositeOperation = 'screen';
+        const lightX = mbCanvas.width/2 + Math.sin(time) * 100;
+        const lg = mbCtx.createRadialGradient(lightX, mbCanvas.height, 10, lightX, mbCanvas.height, 200);
+        lg.addColorStop(0, 'rgba(56, 189, 248, 0.3)'); lg.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        mbCtx.fillStyle = lg; mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height); mbCtx.restore();
+
+        mbSnowflakes.forEach(s => { s.update(mbCanvas.width, mbCanvas.height); s.draw(mbCtx); });
+
+        let hoveredDancer = null;
+        mbDancers.forEach(d => {
+            d.update(mbCanvas.width, mbCanvas.height);
+            const dx = mbMouse.x - d.x; const dy = mbMouse.y - d.y;
+            if (Math.sqrt(dx*dx + dy*dy) < 30) hoveredDancer = d;
+            d.isHovered = false; 
+        });
+        if (hoveredDancer) hoveredDancer.isHovered = true;
+
+        mbDancers.sort((a, b) => a.y - b.y);
+        mbDancers.forEach(d => { if (d !== hoveredDancer) d.draw(mbCtx); });
+        if (hoveredDancer) hoveredDancer.draw(mbCtx);
+
+        mbAnimationId = requestAnimationFrame(animateMailbox);
+    }
+
+    async function checkMyMessages() {
+        const myName = myNameInput.value.trim();
+        if (!myName) return alert("본인의 이름을 입력해주세요.");
+        
+        mbPlaceholder.style.display = 'block'; mbPlaceholder.innerHTML = '✨ 우편함 파티장 입장 중... ✨';
+        mbListContainer.innerHTML = '<div class="empty-msg">로딩 중...</div>';
+        mbDancers = []; mbSnowflakes = [];
+        
+        resizeMailboxCanvas();
+        for(let i=0; i<50; i++) mbSnowflakes.push(new Snowflake(mbCanvas.width, mbCanvas.height));
+
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); 
+            if (!data || data.length === 0) { 
+                const emptyText = '아직 도착한 편지가 없어요 😢';
+                mbPlaceholder.innerHTML = emptyText; mbListContainer.innerHTML = `<div class="empty-msg">${emptyText}</div>`; return; 
+            }
+
+            const myMessages = data.filter(row => row[1] === 'ALL' || row[1].replace(/\s/g, '') === myName.replace(/\s/g, ''));
+            
+            if (myMessages.length === 0) {
+                const emptyText = `'${myName}'님과 모두에게 도착한<br>메시지가 아직 없네요. 텅~`;
+                mbPlaceholder.innerHTML = emptyText; mbListContainer.innerHTML = `<div class="empty-msg">${emptyText}</div>`; return;
+            }
+
+            mbListContainer.innerHTML = '';
+            myMessages.forEach(row => {
+                const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
+                const div = document.createElement('div'); div.className = 'list-item';
+                
+                // [변경] row[2]는 메시지 텍스트
+                let displayMsg = row[2] || "";
+
+                let prefix = (row[1] === 'ALL') ? '<span style="color:#00e676; font-size:0.8rem; margin-right:5px; font-weight:bold;">[전체]</span>' : '<span style="color:#ec4899; font-size:0.8rem; margin-right:5px; font-weight:bold;">[나에게]</span>';
+                div.innerHTML = `<div class="list-date">${dateStr}</div><div>${prefix}<span class="list-text" style="font-weight:bold;">${displayMsg}</span></div>`;
+                mbListContainer.appendChild(div);
+            });
+
+            mbPlaceholder.style.display = 'none'; 
+            const displayMessages = myMessages.slice(0, 10); 
+            displayMessages.forEach(row => {
+                const isPrivate = (row[1] !== 'ALL');
+                
+                // [변경] row[2]는 메시지, row[3]은 설정값
+                let text = row[2] || "";
+                let styleJson = row[3];
+                let style = { hair: 0, shirt: 0, acc: 0 };
+                if (styleJson) {
+                    try { style = JSON.parse(styleJson); } catch(e) {}
+                }
+
+                mbDancers.push(new PartyFairy({ name: row[1], text: text, style: style }, isPrivate, mbCanvas.width, mbCanvas.height));
+            });
+
+            if (currentViewMode === 'scene') { if (mbAnimationId) cancelAnimationFrame(mbAnimationId); animateMailbox(); }
+
+        } catch (error) { 
+            mbPlaceholder.innerHTML = '입장 실패! 다시 시도해주세요.'; mbListContainer.innerHTML = '<div class="empty-msg">오류가 발생했습니다.</div>';
+        }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            document.getElementById(targetId).style.display = 'none'; overlay.style.display = 'none';
+            if (targetId === 'my-msg-modal') { if (mbAnimationId) cancelAnimationFrame(mbAnimationId); }
+        });
+    });
+    function hideAllModals() {
+        // listModal은 제거됨, myMsgModal만 닫음
+        myMsgModal.style.display = 'none'; overlay.style.display = 'none';
+        if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
+    }
+    overlay.addEventListener('click', hideAllModals);
+    
+    // 모달 열기 (기본값: 내 우편함)
+    window.openMyMsgModal = () => {
+        myMsgModal.style.display = 'flex'; 
+        overlay.style.display = 'block'; 
+        
+        // 탭 초기화 (내 우편함)
+        setMailboxTab('MY');
+        
+        // 내 우편함 씬 초기화
+        myNameInput.focus();
+        mbPlaceholder.style.display = 'block'; mbPlaceholder.innerHTML = '이름을 입력하고 확인을 눌러주세요.';
+        mbListContainer.innerHTML = ''; mbCtx.clearRect(0,0, mbCanvas.width, mbCanvas.height);
+        resizeMailboxCanvas(); mbSnowflakes = []; for(let i=0; i<30; i++) mbSnowflakes.push(new Snowflake(mbCanvas.width, mbCanvas.height));
+        if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
+        
+        function waitLoop() {
+            if (myMsgModal.style.display === 'none' || mbDancers.length > 0 || currentViewMode !== 'scene' || currentMailboxTab !== 'MY') return;
+            mbCtx.fillStyle = '#0f172a'; mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height);
+            mbSnowflakes.forEach(s => { s.update(mbCanvas.width, mbCanvas.height); s.draw(mbCtx); });
+            mbAnimationId = requestAnimationFrame(waitLoop);
+        }
+        waitLoop();
+    };
+    window.addEventListener('resize', () => { if (myMsgModal.style.display === 'flex') { resizeMailboxCanvas(); } }); 
+</script>
+
+<script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const isMobile = window.innerWidth <= 768;
@@ -771,10 +914,6 @@
     let particles=[], fairies=[], beltOffset=0, lastDropTime=0, mouseX=0, mouseY=0, hoveredFairy=null;
     let monitorHueOffset = 0, isLogoComplete = false;
     let zones={ hopper:{x:0,y:0}, beltStart:{x:0,y:0}, beltEnd:{x:0,y:0}, storage:{x:0,y:0}, office:{x:0,y:0,w:0,h:0} };
-    
-    // [FIXED] 누락되었던 변수 복원
-    let mainSnowflakes = [];
-    let santaObj = { x: -200, y: 100, active: false };
 
     let vacationCounter = 0;
     let isSantaMode = false;
@@ -891,7 +1030,7 @@
     // 리셋 함수 추가
     window.resetSimulation = () => {
         particles.forEach(p => { 
-            if (p.state === 'PLACED' || p.state === 'ON_BELT' || p.state === 'IN_STORAGE' || p.state === 'CARRIED' || p.state === 'DELIVERING' || p.state === 'FALLING' || p.state === 'FALLING_FROM_TEXT') {
+            if (p.state === 'PLACED' || p.state === 'ON_BELT' || p.state === 'IN_STORAGE' || p.state === 'CARRIED' || p.state === 'DELIVERING' || p.state === 'FALLING') {
                 p.reset(); 
             }
         });
@@ -901,16 +1040,10 @@
                     f.targetItem.reset(); 
                     f.targetItem = null; 
                 } 
-                // [NEW] 만약 눈 치우기 모드였다면 IDLE로 복귀
-                if (f.busyState === 'SWEEPING' || f.busyState === 'MOVING_TO_SWEEP') {
-                    f.busyState = 'NONE'; // or whatever default busy logic uses
-                }
                 f.state = 'IDLE'; 
             } 
         });
         isLogoComplete = false;
-        mainSnowflakes = [];
-        santaObj.active = false;
         playSound('reset');
     };
 
@@ -922,140 +1055,8 @@
         }, 7000); // 30초 -> 7초
     }
 
-    // [FIXED] MainSnowflake 클래스 복원 (메인 화면 로고 완성 시 눈 내림 효과용)
-    class MainSnowflake {
-        constructor(w, h) {
-            this.x = Math.random() * w;
-            this.y = Math.random() * h;
-            this.size = Math.random() * 3 + 1;
-            this.speed = Math.random() * 2 + 1;
-            this.opacity = Math.random() * 0.7 + 0.3;
-        }
-        update(w, h, speed) {
-            this.y += this.speed * speed;
-            this.x += Math.sin(this.y * 0.02) * 0.5 * speed;
-            if (this.y > h) {
-                this.y = -10;
-                this.x = Math.random() * w;
-            }
-        }
-        draw(ctx) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-            ctx.fillRect(this.x, this.y, this.size, this.size); // Pixel style
-        }
-    }
-
-    // [FIXED] drawPixelSanta 함수 복원
-    function drawPixelSanta(ctx, x, y) {
-        ctx.save();
-        ctx.translate(x, y);
-        const scale = 3;
-        ctx.scale(scale, scale);
-
-        // Reindeer
-        ctx.fillStyle = '#8B4513'; // Body
-        ctx.fillRect(0, 5, 8, 5); 
-        ctx.fillRect(0, 10, 2, 4); // Legs
-        ctx.fillRect(6, 10, 2, 4);
-        ctx.fillRect(6, 3, 3, 3); // Head
-        ctx.fillStyle = '#D2691E'; // Antlers
-        ctx.fillRect(7, 1, 1, 2);
-        ctx.fillStyle = 'red'; // Nose
-        ctx.fillRect(9, 4, 1, 1);
-
-        // Sleigh connection
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(0, 7); ctx.lineTo(-5, 7); ctx.stroke();
-
-        // Sleigh
-        ctx.fillStyle = '#A52A2A';
-        ctx.fillRect(-15, 8, 12, 4);
-        ctx.fillRect(-15, 6, 2, 2);
-        ctx.fillStyle = '#FFD700'; // Runner
-        ctx.fillRect(-16, 12, 14, 1);
-        
-        // Santa
-        ctx.fillStyle = 'red'; // Suit
-        ctx.fillRect(-12, 4, 6, 6);
-        ctx.fillStyle = '#fce4d4'; // Face
-        ctx.fillRect(-11, 2, 4, 3);
-        ctx.fillStyle = 'white'; // Beard
-        ctx.fillRect(-11, 4, 4, 2);
-        ctx.fillStyle = 'red'; // Hat
-        ctx.fillRect(-11, 0, 4, 2);
-
-        ctx.restore();
-    }
-    
-    // [NEW] 반짝이는 텍스트 그리기 함수 (starlight text)
-    function drawStarlightText(ctx, text, x, y) {
-        // 임시 캔버스에 텍스트를 그립니다.
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = 600; // 충분한 크기
-        tempCanvas.height = 100;
-        
-        tempCtx.font = '900 50px "Pretendard", sans-serif';
-        tempCtx.fillStyle = '#fff';
-        tempCtx.textAlign = 'center';
-        tempCtx.textBaseline = 'middle';
-        tempCtx.fillText(text, tempCanvas.width / 2, tempCanvas.height / 2);
-        
-        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-        const data = imageData.data;
-        
-        ctx.save();
-        // 텍스트를 화면 중앙(x,y)에 배치하기 위한 오프셋 계산
-        const offsetX = x - tempCanvas.width / 2;
-        const offsetY = y - tempCanvas.height / 2;
-        
-        // 픽셀 스킵 간격 (너무 촘촘하지 않게)
-        const step = 4; 
-        
-        for (let py = 0; py < tempCanvas.height; py += step) {
-            for (let px = 0; px < tempCanvas.width; px += step) {
-                const index = (py * tempCanvas.width + px) * 4;
-                if (data[index + 3] > 128) { // 알파값이 있으면
-                    // 반짝이는 효과
-                    const twinkle = Math.random() > 0.8 ? 1.5 : 1;
-                    const size = Math.random() * 2 * twinkle;
-                    
-                    // 은/금/흰색 랜덤 색상
-                    const colors = ['#ffffff', '#fffacd', '#ffd700', '#c0c0c0'];
-                    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    ctx.beginPath();
-                    ctx.arc(offsetX + px, offsetY + py, size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        }
-        ctx.restore();
-    }
-
     class Particle {
-        constructor(tx,ty,c){
-            this.targetX=tx;
-            this.targetY=ty;
-            this.baseColor=c;
-            this.x=zones.hopper.x+(Math.random()-0.5)*40;
-            this.y=zones.hopper.y-20;
-            this.state='WAITING';
-            this.carrier=null;
-
-            // [NEW] 트리 패턴 색상 미리 지정
-            const rand = Math.random();
-            if (rand < 0.85) {
-                this.treeColor = '#22c55e'; // Green (Tree)
-            } else if (rand < 0.90) {
-                this.treeColor = '#eab308'; // Yellow (Ornament)
-            } else if (rand < 0.95) {
-                this.treeColor = '#ef4444'; // Red (Ornament)
-            } else {
-                this.treeColor = '#854d0e'; // Brown (Branch/Ornament)
-            }
-        }
+        constructor(tx,ty,c){this.targetX=tx;this.targetY=ty;this.baseColor=c;this.x=zones.hopper.x+(Math.random()-0.5)*40;this.y=zones.hopper.y-20;this.state='WAITING';this.carrier=null;}
         update(){
             // 일시정지 시 업데이트 건너뜀
             if (isGamePaused) return;
@@ -1087,25 +1088,7 @@
                 if(Math.abs(dy)<5)this.state='WAITING';
             }
         }
-        // [MODIFIED] Draw function to handle glowing particles when logo is complete
-        draw(){
-            if(this.state==='WAITING') return;
-
-            // [CHANGED] 로고 완성 시 트리 패턴 색상 사용
-            if (typeof isLogoComplete !== 'undefined' && isLogoComplete && this.state === 'PLACED') {
-                 ctx.fillStyle = this.treeColor;
-            } else {
-                 ctx.fillStyle = this.baseColor;
-            }
-
-            if(this.state==='PLACED') {
-                ctx.fillRect(this.x,this.y,CONFIG.pixelSize,CONFIG.pixelSize);
-            } else {
-                ctx.beginPath();
-                ctx.arc(this.x,this.y,CONFIG.pixelSize/2+1,0,Math.PI*2);
-                ctx.fill();
-            }
-        }
+        draw(){if(this.state==='WAITING')return;ctx.fillStyle=this.baseColor;if(this.state==='PLACED')ctx.fillRect(this.x,this.y,CONFIG.pixelSize,CONFIG.pixelSize);else{ctx.beginPath();ctx.arc(this.x,this.y,CONFIG.pixelSize/2+1,0,Math.PI*2);ctx.fill();}}
         reset(){this.state='RETURNING';this.carrier=null;}
     }
 
@@ -1143,38 +1126,9 @@
             // 일시정지 시 애니메이션 프레임 업데이트 중단
             if (!isGamePaused) {
                 this.animFrame += 0.1 * GAME_SPEED; // 애니메이션 속도도 반영
-                
-                // 로고 완성 시 청소 모드 (BUILDER만)
-                if (isLogoComplete && this.role === 'BUILDER') {
-                    this.updateSweeper();
-                } else {
-                    if(this.role==='BUILDER') this.updateBuilder(); 
-                    else if(this.role==='OFFICE') this.updateOffice(); 
-                }
+                if(this.role==='BUILDER') this.updateBuilder(); 
+                else if(this.role==='OFFICE') this.updateOffice(); 
             }
-        }
-        
-        updateSweeper() {
-             // 빗자루질 로직: 랜덤하게 돌아다니며 청소
-             if (this.busyState !== 'SWEEPING' && this.busyState !== 'MOVING_TO_SWEEP') {
-                 this.busyState = 'MOVING_TO_SWEEP';
-                 this.busyTargetX = canvas.width * 0.1 + Math.random() * canvas.width * 0.8;
-                 this.busyTargetY = canvas.height * 0.5 + Math.random() * canvas.height * 0.4;
-             }
-             
-             if (this.busyState === 'MOVING_TO_SWEEP') {
-                 if(this.moveTo(this.busyTargetX, this.busyTargetY)) {
-                     this.busyState = 'SWEEPING';
-                     this.busyTimer = 100 + Math.random() * 100;
-                 }
-             } else if (this.busyState === 'SWEEPING') {
-                 this.busyTimer -= 1 * GAME_SPEED;
-                 if (this.busyTimer <= 0) {
-                     this.busyState = 'MOVING_TO_SWEEP';
-                     this.busyTargetX = canvas.width * 0.1 + Math.random() * canvas.width * 0.8;
-                     this.busyTargetY = canvas.height * 0.5 + Math.random() * canvas.height * 0.4;
-                 }
-             }
         }
 
         updateOffice(){
@@ -1234,23 +1188,6 @@
             this.y+=(dy/d)*moveStep;
             return false;
         }
-        
-        // [FIXED] 빗자루 그리기 메서드 복원
-        drawBroom(ctx) {
-            ctx.save();
-            const angle = Math.sin(Date.now() * 0.01 * GAME_SPEED) * 0.5;
-            ctx.rotate(angle);
-            ctx.fillStyle = '#8d6e63'; // Handle
-            ctx.fillRect(4, -5, 2, 20);
-            ctx.fillStyle = '#fbc02d'; // Bristles
-            ctx.beginPath();
-            ctx.moveTo(3, 15);
-            ctx.lineTo(7, 15);
-            ctx.lineTo(9, 22);
-            ctx.lineTo(1, 22);
-            ctx.fill();
-            ctx.restore();
-        }
 
         draw() {
             ctx.save(); ctx.translate(this.x, this.y);
@@ -1270,7 +1207,7 @@
             
             // 일시정지 아닐 때만 움직임 효과 적용
             const sway = isGamePaused ? 0 : Math.sin(Date.now()*0.05 * GAME_SPEED);
-            if(!this.isPaused && (this.busyState==='HAMMER'||(this.role==='OFFICE'&&this.busyState==='TYPING') || this.busyState==='SWEEPING')) ctx.translate(0, sway);
+            if(!this.isPaused && (this.busyState==='HAMMER'||(this.role==='OFFICE'&&this.busyState==='TYPING'))) ctx.translate(0, sway);
             
             if (indicatorColor) { ctx.fillStyle = indicatorColor; ctx.beginPath(); ctx.arc(0, -18, 3.5, 0, Math.PI*2); ctx.fill(); }
             
@@ -1405,18 +1342,6 @@
     };
 
     function drawEnvironment() {
-        if (isLogoComplete) {
-            // Night mode
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, '#0f172a'); 
-            grad.addColorStop(1, '#1e1b4b');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        } else {
-            // Day mode (White/Transparent)
-             ctx.clearRect(0, 0, canvas.width, canvas.height); 
-        }
-
         ctx.fillStyle = '#999'; ctx.beginPath(); ctx.moveTo(zones.hopper.x - 30, zones.hopper.y - 50); ctx.lineTo(zones.hopper.x + 30, zones.hopper.y - 50); ctx.lineTo(zones.hopper.x + 10, zones.hopper.y); ctx.lineTo(zones.hopper.x - 10, zones.hopper.y); ctx.fill();
         ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 40; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltEnd.x, zones.beltEnd.y); ctx.stroke();
         
@@ -1428,33 +1353,20 @@
         ctx.lineWidth = 5; ctx.strokeStyle = '#64748b'; ctx.beginPath(); ctx.moveTo(zones.beltEnd.x, zones.beltEnd.y); ctx.lineTo(zones.beltEnd.x, canvas.height); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltStart.x, canvas.height); ctx.stroke();
         const lx = canvas.width/2 - 250; const ly = canvas.height/2 + 60; ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - 120); ctx.moveTo(lx + 30, ly); ctx.lineTo(lx + 30, ly - 120); for(let i=0; i<5; i++) { ctx.moveTo(lx, ly - 20 - (i*20)); ctx.lineTo(lx+30, ly - 20 - (i*20)); } ctx.stroke();
         ctx.fillStyle = '#f8fafc'; ctx.fillRect(zones.office.x, zones.office.y, zones.office.w, zones.office.h); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(zones.office.x, canvas.height - 50, zones.office.w, 50);
-        
-        // Draw Office Desks
         fairies.forEach((f, i) => {
             if (f.role === 'OFFICE') {
                 const deskX = f.seatX; const deskY = f.seatY;
                 ctx.fillStyle = '#cbd5e1'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#475569'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25); 
                 
-                // [CHANGED] 로고 완성 후에는 은색/금색/흰색 그라데이션
-                if (isLogoComplete) {
-                     // 로고와 비슷하게 조명 느낌 (화면이 밝게 빛남)
-                     const phase = Date.now() * 0.003;
-                     const b = Math.floor(150 + 105 * (Math.sin(phase) + 1) / 2);
-                     ctx.fillStyle = `rgb(255, 255, ${b})`;
-                     ctx.shadowColor = `rgb(255, 255, ${b})`; 
-                     ctx.shadowBlur = 10; 
-                } else {
-                    const hue = (monitorHueOffset + i * 10) % 360;
-                    ctx.fillStyle = `hsl(${hue}, 70%, 80%)`;
-                    ctx.shadowBlur = 0;
-                }
+                const hue = (monitorHueOffset + i * 10) % 360;
+                const saturation = isLogoComplete ? '100%' : '70%';
+                const lightness = isLogoComplete ? '60%' : '80%';
+                ctx.fillStyle = `hsl(${hue}, ${saturation}, ${lightness})`;
+                if(isLogoComplete) { ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 15; }
                 ctx.fillRect(deskX - 13, deskY - 18, 26, 20); ctx.shadowBlur = 0;
             }
         });
-
-        // Copyright
-        ctx.fillStyle = isLogoComplete ? 'rgba(255,255,255,0.5)' : '#94a3b8'; 
-        ctx.font = 'bold 15px "Pretendard", sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
+        ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 15px "Pretendard", sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
     }
     
     function animate() {
@@ -1466,83 +1378,41 @@
                 if (p) { p.state = 'FALLING'; lastDropTime = now; } 
             }
         }
-        
-        const placedCount = particles.filter(p => p.state === 'PLACED').length;
-        // 로고 완성 체크
-        if (!isLogoComplete && placedCount > 0 && placedCount === particles.length) {
-            isLogoComplete = true;
-            // 눈송이 생성
-            mainSnowflakes = [];
-            for(let i=0; i<100; i++) mainSnowflakes.push(new MainSnowflake(canvas.width, canvas.height));
-            // 산타 시작
-            santaObj.active = true;
-            santaObj.x = -100;
-            santaObj.y = 100;
-        }
 
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
         drawEnvironment(); 
         
-        // 눈 내리기 (로고 완성 시)
-        if (isLogoComplete) {
-            if (!isGamePaused) {
-                mainSnowflakes.forEach(s => s.update(canvas.width, canvas.height, GAME_SPEED));
-            }
-            mainSnowflakes.forEach(s => s.draw(ctx));
-            
-            // 산타 애니메이션
-            if (santaObj.active) {
-                if (!isGamePaused) santaObj.x += 2 * GAME_SPEED;
-                drawPixelSanta(ctx, santaObj.x, santaObj.y);
-                if (santaObj.x > canvas.width + 100) santaObj.x = -100; // 반복
-            }
-
-            // [NEW] 픽셀 스타일 Starlight 텍스트 그리기
-            drawStarlightText(ctx, "Happy New Year!", canvas.width/2, 150);
-        }
-
         fairies.forEach(f => { f.update(); f.draw(); }); 
+        particles.forEach(p => { p.update(); p.draw(); });
         
-        // [MODIFIED] 로고 완성 시 파티클 그리기 - 조명 효과 추가
-        if (isLogoComplete) {
-            ctx.save();
-            const phase = Date.now() * 0.003;
-            // 빛의 색상: White <-> Warm Yellowish (B값만 조절)
-            const b = Math.floor(150 + 105 * (Math.sin(phase) + 1) / 2);
-            ctx.shadowColor = `rgb(255, 255, ${b})`;
-            ctx.shadowBlur = 20 + 10 * Math.sin(phase * 1.5);
-            particles.forEach(p => { p.update(); p.draw(); });
-            ctx.restore();
-        } else {
-             particles.forEach(p => { p.update(); p.draw(); });
-        }
-
         if (hoveredFairy) { hoveredFairy.drawBubble(); canvas.style.cursor = 'pointer'; } else { canvas.style.cursor = 'default'; }
+        
+        const placedCount = particles.filter(p => p.state === 'PLACED').length;
+        isLogoComplete = (placedCount === particles.length && particles.length > 0);
         
         if (!isGamePaused) {
             monitorHueOffset += (isLogoComplete ? 5 : 1) * GAME_SPEED; 
         }
 
-        // 로고 텍스트 (완성 전: 흐릿, 완성 후: 제거 - 도트만 보이게)
-        if (!isLogoComplete) { 
-            ctx.save();
-            ctx.globalAlpha = 0.05; 
-            ctx.fillStyle = '#000'; 
-            ctx.font = CONFIG.font; 
-            ctx.textAlign='center'; 
-            ctx.fillText(CONFIG.text, canvas.width/2, canvas.height/2); 
-            ctx.restore();
-        }
+        ctx.save(); 
+        if (isLogoComplete) {
+             const hue = (monitorHueOffset * 2) % 360;
+             ctx.globalAlpha = 0.8; ctx.fillStyle = `hsl(${hue}, 100%, 60%)`; ctx.shadowColor = `hsl(${hue}, 100%, 50%)`; ctx.shadowBlur = 30;
+        } else { ctx.globalAlpha = 0.05; ctx.fillStyle = '#000'; }
+        ctx.font = CONFIG.font; ctx.textAlign='center'; ctx.fillText(CONFIG.text, canvas.width/2, canvas.height/2); ctx.restore();
 
         requestAnimationFrame(animate);
     }
     
-    // ... 나머지 이벤트 리스너들 (생략하지 않고 기존 코드 유지) ...
     async function loadInitialMessages() {
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL);
             const data = await response.json(); 
             if (data && data.length > 0) {
+                // [수정] 최신순으로 정렬 (뒤에서부터 가져오거나 reverse)
+                // 원본 데이터를 복사([...data])한 뒤 뒤집어서(.reverse()) 최신 10개를 자릅니다(.slice(0, 10))
                 const recent10 = [...data].reverse().slice(0, 10);
+                
                 const shuffledFairies = [...fairies].sort(() => 0.5 - Math.random());
                 recent10.forEach((row, idx) => {
                     if (idx < shuffledFairies.length) {
@@ -1562,6 +1432,9 @@
     canvas.addEventListener('touchstart', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn') || e.target.closest('.modal-window')) return;
         const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
+        
+        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
+        
         let touchedFairy = false;
         fairies.forEach(f => {
             if (Math.abs(tx - f.x) < 40 && Math.abs(ty - f.y) < 50) {
@@ -1571,22 +1444,46 @@
                 } else { f.giveVacation(); }
             }
         });
+        if (!touchedFairy) {
+            const cx = canvas.width / 2; const cy = canvas.height / 2;
+            if (tx > cx - 200 && tx < cx + 200 && ty > cy - 80 && ty < cy + 80) {
+                // [수정됨] 로고 클릭 초기화 기능 삭제 (이제 리셋 버튼으로만 가능)
+            }
+        }
     }, { passive: false });
 
     window.addEventListener('mousedown', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('.modal-window') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
-        let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); 
+        
+        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
+
+        let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); if (clickedFairy) return;
+        if (cx > canvas.width/2 - 250 && cx < canvas.width/2 + 250 && cy > canvas.height/2 - 80 && cy < canvas.height/2 + 80) { 
+            // [수정됨] 로고 클릭 초기화 기능 삭제 (이제 리셋 버튼으로만 가능)
+        }
     });
 
     let prevHoveredFairy = null; 
     window.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
+        
+        // 커서 포인터 변경 로직 (작업반장 부분 제거)
+
         let closest = null; let minDist = 30; 
         fairies.forEach(f => { const dx = mouseX - f.x; const dy = mouseY - f.y; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < minDist) { minDist = dist; closest = f; } }); 
         hoveredFairy = closest;
-        if (hoveredFairy) { canvas.style.cursor = 'pointer'; } else { canvas.style.cursor = 'default'; }
-        if (closest !== prevHoveredFairy) { if (closest && closest.assignedMessage) { playSound('pop'); } prevHoveredFairy = closest; }
+        
+        if (hoveredFairy) {
+            canvas.style.cursor = 'pointer';
+        } else {
+            canvas.style.cursor = 'default';
+        }
+
+        if (closest !== prevHoveredFairy) {
+            if (closest && closest.assignedMessage) { playSound('pop'); }
+            prevHoveredFairy = closest;
+        }
     });
     
     window.addEventListener('resize', init); 
