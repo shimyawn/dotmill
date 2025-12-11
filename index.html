@@ -18,9 +18,51 @@
         canvas { display: block; }
         
         /* UI 레이아웃 */
-        #ui { position: absolute; top: 30px; left: 30px; pointer-events: none; color: #333; z-index: 10; transition: all 0.3s; }
-        h1 { margin: 0 0 5px 0; font-size: 1.8rem; color: #2c3e50; font-weight: 800; letter-spacing: -0.02em; } 
+        #ui { position: absolute; top: 30px; left: 30px; pointer-events: none; color: #333; z-index: 10; transition: all 0.3s; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
         
+        /* 헤더 영역 */
+        .header-row { display: flex; align-items: center; gap: 15px; margin-bottom: 4px; }
+        h1 { margin: 0; font-size: 1.8rem; color: #2c3e50; font-weight: 800; letter-spacing: -0.02em; line-height: 1; } 
+        
+        /* 시뮬레이션 컨트롤 */
+        #sim-controls { display: flex; gap: 6px; pointer-events: auto; }
+        #sim-controls button {
+            background: rgba(255, 255, 255, 0.95); border: 1px solid #cbd5e1; border-radius: 8px;
+            padding: 8px 14px; cursor: pointer; font-size: 0.9rem; color: #334155;
+            font-weight: 700; font-family: 'Pretendard'; transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center;
+            min-width: 40px;
+        }
+        #sim-controls button:hover { background: #fff; color: #0ea5e9; border-color: #0ea5e9; transform: translateY(-1px); }
+        #sim-controls button:active { transform: translateY(0); }
+        
+        /* 도움말 버튼 활성 상태 */
+        #btn-help.active { background: #e0f2fe; color: #0ea5e9; border-color: #0ea5e9; }
+
+        /* 도움말 팝업 박스 */
+        #help-popup {
+            display: none; /* 기본 숨김 */
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #cbd5e1; border-radius: 16px;
+            padding: 16px; width: 260px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+            animation: popIn 0.2s ease;
+            font-size: 0.8rem; color: #475569; line-height: 1.6;
+        }
+        .help-section { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed #e2e8f0; }
+        .help-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .help-title { font-weight: 800; color: #1e293b; margin-bottom: 6px; display: block; font-size: 0.85rem; }
+        .help-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dot.green { background: #00e676; }
+        .dot.blue { background: #2979ff; }
+        .dot.yellow { background: #ef4444; } /* 빨간 우편함이지만 가독성 위해 텍스트 색상 계열 유지 */
+        .dot.gray { background: #64748b; }
+        
+        .warning-txt { color: #ea580c; font-weight: 600; background: #fff7ed; padding: 8px; border-radius: 8px; margin-top: 5px; font-size: 0.75rem; }
+
         /* 우편함 아이콘 */
         #mailbox-icon {
             position: absolute; right: 30px; bottom: 210px; width: 40px; height: 50px;
@@ -38,26 +80,19 @@
         }
         #mailbox-icon:hover #mailbox-text { opacity: 1; }
 
-        .desc { font-size: 0.8rem; color: #555; background: rgba(255,255,255,0.8); padding: 12px 18px; border-radius: 12px; backdrop-filter: blur(5px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); line-height: 1.6; letter-spacing: -0.01em; margin-top: 5px; }
-        .sub-desc { margin-top: 8px; font-size: 0.85rem; color: #475569; background: rgba(255, 255, 255, 0.9); padding: 12px 18px; border-radius: 12px; backdrop-filter: blur(5px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); line-height: 1.5; font-weight: 500; }
-
         .green-txt { color: #00e676; font-weight: 700; }
         .blue-txt { color: #2979ff; font-weight: 700; }
         .yellow-txt { color: #ef4444; font-weight: 700; } 
         .gray-txt { color: #555; font-weight: 700; }
 
-        /* 안내 멘트 & 버튼 */
+        /* 안내 멘트 (우측 상단) */
         #guide-text {
             position: absolute; top: 30px; right: 30px; text-align: right; color: #444; pointer-events: none; z-index: 10;
-            background: rgba(255,255,255,0.85); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(5px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); letter-spacing: -0.01em;
+            background: rgba(255,255,255,0.9); padding: 18px 22px; border-radius: 16px; backdrop-filter: blur(8px); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); letter-spacing: -0.01em; border: 1px solid rgba(255,255,255,0.5);
         }
-        #guide-text h2 { margin: 0 0 8px 0; font-size: 1.1rem; color: #2c3e50; font-weight: 700; }
-        #guide-text p { margin: 0; font-size: 0.9rem; line-height: 1.5; color: #666; font-weight: 400; }
-
-        #view-all-btn {
-            position: absolute; top: 140px; right: 30px; background: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.2s, background 0.2s; z-index: 20; pointer-events: auto; font-family: 'Pretendard', sans-serif; 
-        }
-        #view-all-btn:hover { background: #0056b3; transform: scale(1.05); }
+        #guide-text h2 { margin: 0 0 10px 0; font-size: 1.1rem; color: #1e293b; font-weight: 800; }
+        #guide-text p { margin: 0; font-size: 0.9rem; line-height: 1.6; color: #475569; font-weight: 500; word-break: keep-all; }
 
         #audio-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background-color: #2c3e50; color: white; border: 3px solid white; border-radius: 50%; cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.2s; }
         #audio-btn:active { transform: scale(0.9); }
@@ -67,14 +102,29 @@
         #custom-alert h3 { margin: 0 0 10px 0; color: #2c3e50; font-weight: 700; font-size: 1.3rem; }
         #pc-toast { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(30, 41, 59, 0.9); color: white; padding: 12px 24px; border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 300; text-align: center; font-size: 0.9rem; pointer-events: none; animation: fadeInOut 2.5s ease forwards; }
 
-        /* 모달 스타일 */
+        /* 통합 모달 스타일 */
         .modal-window { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 600px; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); z-index: 100; flex-direction: column; overflow: hidden; border: 1px solid #f1f1f1; animation: fadeIn 0.3s ease; max-width: 90%; max-height: 90%; }
-        #list-modal { width: 400px; height: 600px; }
-        .modal-header { padding: 20px 25px; background: #fff; border-bottom: 1px solid #f1f1f1; font-weight: 700; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; color: #1e293b; z-index: 10; position: relative;}
+        
+        .modal-header { padding: 15px 20px; background: #fff; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; z-index: 10; position: relative;}
+        
+        /* 메인 탭 버튼 */
+        .main-tabs { display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
+        .tab-btn {
+            border: none; background: transparent; padding: 8px 16px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s;
+            font-family: 'Pretendard';
+        }
+        .tab-btn.active { background: white; color: #0f172a; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .tab-btn:hover:not(.active) { color: #334155; }
+
         .view-toggle { display: flex; background: #f1f5f9; border-radius: 20px; padding: 4px; gap: 4px; font-size: 0.85rem; font-weight: 600; margin-left: auto; margin-right: 15px; }
         .view-toggle label { cursor: pointer; padding: 6px 12px; border-radius: 16px; color: #64748b; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
         .view-toggle label.active { background: white; color: #0ea5e9; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .close-modal-btn { cursor: pointer; font-size: 1.5rem; color: #94a3b8; margin-left: 0; }
+        .close-modal-btn { cursor: pointer; font-size: 1.8rem; color: #94a3b8; line-height: 1; margin-left: 10px; }
+        
+        /* 탭 컨텐츠 영역 */
+        .tab-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+
         .msg-list-container { flex: 1; overflow-y: auto; padding: 0; background: #f8fafc; }
         .list-item { padding: 20px 25px; border-bottom: 1px solid #f1f5f9; background: white; }
         .list-date { font-size: 0.8rem; color: #94a3b8; margin-bottom: 6px; }
@@ -85,7 +135,7 @@
         #my-msg-auth { padding: 20px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; z-index: 10; position: relative; }
         #my-name-input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-family: 'Pretendard'; }
         #my-msg-btn { background: #0ea5e9; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Pretendard'; }
-        #mailbox-content-area { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        #mailbox-content-area { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
         #mailbox-canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; overflow: hidden; display: none; }
         #mailbox-bg-canvas { width: 100%; height: 100%; cursor: pointer; }
         #mailbox-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #94a3b8; text-align: center; width: 100%; pointer-events: none; line-height: 1.6; }
@@ -150,13 +200,10 @@
 
         @media (max-width: 768px) {
             #guide-text { display: block; top: 10px; left: 50%; right: auto; transform: translateX(-50%); width: 90%; text-align: center; }
-            #view-all-btn { top: auto; bottom: 90px; right: auto; left: 50%; transform: translateX(-50%); padding: 8px 16px; font-size: 0.8rem; }
             #audio-btn { bottom: auto; top: 20px; right: 20px; width: 40px; height: 40px; font-size: 1.2rem; }
             #ui { top: 95px; width: 92%; }
-            #ui h1 { display: none; } 
+            #sim-controls { width: 100%; justify-content: center; }
             #mailbox-icon { right: 20px; bottom: 210px; }
-            .desc { font-size: 0.7rem; }
-            .sub-desc { font-size: 0.75rem; }
             #input-bar { bottom: 20px; width: 95%; padding: 8px; gap: 6px; }
             .to-all-wrapper { font-size: 13px; }
             #receiver-input { width: 50px; font-size: 13px; }
@@ -164,23 +211,38 @@
             #send-btn { width: 36px; height: 36px; font-size: 1rem; }
             #style-toggle-btn { width: 36px; height: 36px; font-size: 1.1rem; }
             .modal-window { width: 380px; height: 550px; }
-            #list-modal { width: 380px; height: 550px; }
         }
     </style>
 </head>
 <body>
 
     <div id="ui">
-        <h1>DOTMILL</h1>
-        <div class="desc">
-            <span class="green-txt">● 방금 도착한 메시지 알림</span>
-            <span class="blue-txt">● 파란 옷을 입은 동료들 확인</span>
-            <span class="yellow-txt">● 빨간 우편함 클릭: 내 우편함</span> 
-            <span class="gray-txt">● 로고 클릭: 작업 리셋</span>
+        <!-- 속도 및 일시정지 컨트롤 + 도움말 -->
+        <div id="sim-controls">
+            <button onclick="togglePause()" id="btn-pause" title="일시정지/재생">⏸</button>
+            <button onclick="toggleSpeed()" id="btn-speed" title="속도 조절">1x</button>
+            <button onclick="toggleHelp()" id="btn-help" title="도움말 및 사용법">?</button>
         </div>
-        <div class="sub-desc">
-            여기는 Dot을 굴려서 멋진 걸 만드는 방앗간이에요.<br>
-            직원을 눌러서 휴식을 선물해주세요.
+
+        <!-- 도움말 팝업 -->
+        <div id="help-popup">
+            <div class="help-section">
+                <span class="help-title">💡 색상별 의미</span>
+                <div class="help-row"><div class="dot green"></div> 방금 도착한 메시지 알림</div>
+                <div class="help-row"><div class="dot blue"></div> 파란 옷을 입은 동료들</div>
+                <div class="help-row"><div class="dot yellow"></div> 빨간 우편함: 내 메시지함</div>
+                <div class="help-row"><div class="dot gray"></div> 로고 클릭: 작업 리셋</div>
+            </div>
+            <div class="help-section">
+                <span class="help-title">📨 메시지 보내는 법</span>
+                <p>
+                    하단 바에서 받는 사람 이름을(3글자) 입력하거나 '모두'를 체크하고,
+                    👕 버튼으로 캐릭터를 꾸민 뒤 메시지를 적어 전송하세요!
+                </p>
+                <div class="warning-txt">
+                    ⚠️ 한 번에 너무 많은 메시지를 보내면 오류가 날 수 있어용! 조금만 천천히 보내주세용 🥺
+                </div>
+            </div>
         </div>
     </div>
 
@@ -189,14 +251,14 @@
     </div>
 
     <div id="guide-text">
-        <h2>2026 새해 맞이 닷밀 롤링페이퍼 📜</h2>
+        <h2>2026 닷밀 신년맞이 롤링페이퍼 📜</h2>
         <p>
-            올 한 해 고생한 동료에게 칭찬과 응원의 메시지를 보내주세요!<br>
-            보내는 사람은 익명으로 처리되며, 동료의 이름으로 전달됩니다.
+            여기는 DOT을 굴려 멋진 것들을 만드는 방앗간, DOMILL입니다.<br>
+            화면에 보이는 동료들을 클릭해서 휴식을 선물하세요.<br>
+            그리고 동료들에게 익명으로 메시지를 전하세요.
         </p>
     </div>
 
-    <button id="view-all-btn">📜 전체 메시지 보기</button>
     <button id="audio-btn">🔇</button>
 
     <div id="custom-alert">
@@ -211,32 +273,42 @@
 
     <div id="modal-overlay"></div>
 
-    <!-- 전체 메시지함 -->
-    <div id="list-modal" class="modal-window">
-        <div class="modal-header">전체 메시지함 <span class="close-modal-btn" data-target="list-modal">×</span></div>
-        <div id="msg-list" class="msg-list-container"><div class="empty-msg">로딩 중... ⏳</div></div>
-    </div>
-
-    <!-- 내 메시지 확인함 -->
+    <!-- 통합 메시지 모달 -->
     <div id="my-msg-modal" class="modal-window">
         <div class="modal-header">
-            <span>📬 나에게 온 메시지</span>
-            <div class="view-toggle">
+            <!-- 메인 탭 -->
+            <div class="main-tabs">
+                <button class="tab-btn active" id="tab-my" onclick="setMailboxTab('MY')">내 우편함 📬</button>
+                <button class="tab-btn" id="tab-all" onclick="setMailboxTab('ALL')">전체 메시지 📜</button>
+            </div>
+            
+            <!-- 내 메시지 탭일 때만 보이는 뷰 토글 -->
+            <div class="view-toggle" id="my-view-toggle">
                 <label id="toggle-list" onclick="setViewMode('list')">📄 목록</label>
                 <label id="toggle-scene" onclick="setViewMode('scene')" class="active">✨ 장면</label>
             </div>
+            
             <span class="close-modal-btn" data-target="my-msg-modal">×</span>
         </div>
-        <div id="my-msg-auth">
-            <input type="text" id="my-name-input" placeholder="본인 이름을 입력하세요" onkeypress="if(event.key==='Enter') checkMyMessages()">
-            <button id="my-msg-btn" onclick="checkMyMessages()">확인</button>
-        </div>
-        <div id="mailbox-content-area">
-            <div id="mailbox-placeholder">이름을 입력하고 확인을 눌러주세요.<br>(정확히 일치해야 합니다)</div>
-            <div id="my-msg-list-container"></div>
-            <div id="mailbox-canvas-container">
-                <canvas id="mailbox-bg-canvas"></canvas>
+
+        <!-- TAB 1: 내 우편함 내용 -->
+        <div id="tab-content-my" class="tab-content">
+            <div id="my-msg-auth">
+                <input type="text" id="my-name-input" placeholder="본인 이름을 입력하세요" onkeypress="if(event.key==='Enter') checkMyMessages()">
+                <button id="my-msg-btn" onclick="checkMyMessages()">확인</button>
             </div>
+            <div id="mailbox-content-area">
+                <div id="mailbox-placeholder">이름을 입력하고 확인을 눌러주세요.<br>(정확히 일치해야 합니다)</div>
+                <div id="my-msg-list-container"></div>
+                <div id="mailbox-canvas-container">
+                    <canvas id="mailbox-bg-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: 전체 메시지 내용 -->
+        <div id="tab-content-all" class="tab-content" style="display:none;">
+            <div id="all-msg-list" class="msg-list-container"><div class="empty-msg">로딩 중... ⏳</div></div>
         </div>
     </div>
 
@@ -303,20 +375,17 @@
     const receiverInput = document.getElementById('receiver-input'); 
     const msgInput = document.getElementById('msg-input');
     const sendBtn = document.getElementById('send-btn');
-    const viewAllBtn = document.getElementById('view-all-btn');
     const toAllCheck = document.getElementById('to-all-check'); 
     
-    const listModal = document.getElementById('list-modal');
+    // 모달 관련 요소
     const myMsgModal = document.getElementById('my-msg-modal');
     const overlay = document.getElementById('modal-overlay');
     const closeBtns = document.querySelectorAll('.close-modal-btn');
     
-    const msgList = document.getElementById('msg-list');
     const myNameInput = document.getElementById('my-name-input');
     const customAlert = document.getElementById('custom-alert');
 
     // [커스텀 스타일 데이터]
-    // 파랑, 검정, 회색 + 무지개색 (빨, 주, 노, 초, 하늘, 남, 보라) 총 10색
     const CUSTOM_SHIRT_COLORS = [
         '#3b82f6', '#1e293b', '#64748b', // Blue, Black, Gray (기존)
         '#ef4444', '#f97316', '#eab308', // Red, Orange, Yellow
@@ -359,7 +428,36 @@
         }
     }
 
-    // [뷰 모드 관리]
+    // [통합 모달 탭 관리]
+    let currentMailboxTab = 'MY'; // 'MY' or 'ALL'
+
+    window.setMailboxTab = (tab) => {
+        currentMailboxTab = tab;
+        const tabMy = document.getElementById('tab-my');
+        const tabAll = document.getElementById('tab-all');
+        const contentMy = document.getElementById('tab-content-my');
+        const contentAll = document.getElementById('tab-content-all');
+        const myViewToggle = document.getElementById('my-view-toggle');
+
+        if (tab === 'MY') {
+            tabMy.classList.add('active');
+            tabAll.classList.remove('active');
+            contentMy.style.display = 'flex';
+            contentAll.style.display = 'none';
+            myViewToggle.style.visibility = 'visible';
+            setViewMode(currentViewMode); 
+        } else {
+            tabMy.classList.remove('active');
+            tabAll.classList.add('active');
+            contentMy.style.display = 'none';
+            contentAll.style.display = 'flex';
+            myViewToggle.style.visibility = 'hidden';
+            if (mbAnimationId) cancelAnimationFrame(mbAnimationId); 
+            renderAllMessages();
+        }
+    }
+
+    // [내 우편함 뷰 모드 관리]
     let currentViewMode = 'scene';
     const mbListContainer = document.getElementById('my-msg-list-container');
     const mbCanvasContainer = document.getElementById('mailbox-canvas-container');
@@ -455,11 +553,13 @@
         } catch (error) { alert("전송에 실패했습니다."); } finally { sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); }
     }
 
-    async function fetchAllMessages() {
-        msgList.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
+    // 전체 메시지 로드 (탭 2)
+    async function renderAllMessages() {
+        const container = document.getElementById('all-msg-list');
+        container.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); msgList.innerHTML = ''; 
-            if (!data || data.length === 0) { msgList.innerHTML = '<div class="empty-msg">메시지 없음</div>'; return; }
+            const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); container.innerHTML = ''; 
+            if (!data || data.length === 0) { container.innerHTML = '<div class="empty-msg">메시지 없음</div>'; return; }
             data.forEach(row => {
                 const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div'); div.className = 'list-item';
@@ -474,9 +574,9 @@
                     displayReceiver = `To. ${displayReceiver}`;
                 }
                 div.innerHTML = `<div class="list-date">${dateStr}</div><div><span class="${receiverClass}">${displayReceiver}</span> <span class="list-text">${displayMsg}</span></div>`;
-                msgList.appendChild(div);
+                container.appendChild(div);
             });
-        } catch (error) { msgList.innerHTML = '<div class="empty-msg">불러오기 실패!</div>'; }
+        } catch (error) { container.innerHTML = '<div class="empty-msg">불러오기 실패!</div>'; }
     }
 
     class Snowflake {
@@ -713,6 +813,7 @@
                 const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div'); div.className = 'list-item';
                 
+                // [변경] row[2]는 메시지 텍스트
                 let displayMsg = row[2] || "";
 
                 let prefix = (row[1] === 'ALL') ? '<span style="color:#00e676; font-size:0.8rem; margin-right:5px; font-weight:bold;">[전체]</span>' : '<span style="color:#ec4899; font-size:0.8rem; margin-right:5px; font-weight:bold;">[나에게]</span>';
@@ -725,6 +826,7 @@
             displayMessages.forEach(row => {
                 const isPrivate = (row[1] !== 'ALL');
                 
+                // [변경] row[2]는 메시지, row[3]은 설정값
                 let text = row[2] || "";
                 let styleJson = row[3];
                 let style = { hair: 0, shirt: 0, acc: 0 };
@@ -744,7 +846,6 @@
 
     sendBtn.addEventListener('click', sendMessage);
     msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-    viewAllBtn.addEventListener('click', () => { listModal.style.display = 'flex'; overlay.style.display = 'block'; fetchAllMessages(); });
     closeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
@@ -753,19 +854,29 @@
         });
     });
     function hideAllModals() {
-        listModal.style.display = 'none'; myMsgModal.style.display = 'none'; overlay.style.display = 'none';
+        // listModal은 제거됨, myMsgModal만 닫음
+        myMsgModal.style.display = 'none'; overlay.style.display = 'none';
         if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
     }
     overlay.addEventListener('click', hideAllModals);
+    
+    // 모달 열기 (기본값: 내 우편함)
     window.openMyMsgModal = () => {
-        myMsgModal.style.display = 'flex'; overlay.style.display = 'block'; myNameInput.focus();
-        setViewMode('scene');
+        myMsgModal.style.display = 'flex'; 
+        overlay.style.display = 'block'; 
+        
+        // 탭 초기화 (내 우편함)
+        setMailboxTab('MY');
+        
+        // 내 우편함 씬 초기화
+        myNameInput.focus();
         mbPlaceholder.style.display = 'block'; mbPlaceholder.innerHTML = '이름을 입력하고 확인을 눌러주세요.';
         mbListContainer.innerHTML = ''; mbCtx.clearRect(0,0, mbCanvas.width, mbCanvas.height);
         resizeMailboxCanvas(); mbSnowflakes = []; for(let i=0; i<30; i++) mbSnowflakes.push(new Snowflake(mbCanvas.width, mbCanvas.height));
         if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
+        
         function waitLoop() {
-            if (myMsgModal.style.display === 'none' || mbDancers.length > 0 || currentViewMode !== 'scene') return;
+            if (myMsgModal.style.display === 'none' || mbDancers.length > 0 || currentViewMode !== 'scene' || currentMailboxTab !== 'MY') return;
             mbCtx.fillStyle = '#0f172a'; mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height);
             mbSnowflakes.forEach(s => { s.update(mbCanvas.width, mbCanvas.height); s.draw(mbCtx); });
             mbAnimationId = requestAnimationFrame(waitLoop);
@@ -800,6 +911,48 @@
     let isSantaMode = false;
     let santaTimer = null;
 
+    // 시뮬레이션 속도 제어 변수
+    let speedLevel = 1; // 화면 표시용 (1x, 2x...)
+    const BASE_SPEED_FACTOR = 0.7; // 기본 속도를 기존의 70%로 설정
+    let GAME_SPEED = speedLevel * BASE_SPEED_FACTOR; // 실제 연산용 속도
+    let isGamePaused = false;
+
+    // 일시정지 토글 함수
+    window.togglePause = () => {
+        isGamePaused = !isGamePaused;
+        const btn = document.getElementById('btn-pause');
+        btn.innerText = isGamePaused ? '▶' : '⏸';
+    };
+
+    // 속도 조절 함수 (1x -> 2x -> 4x -> 8x -> 1x)
+    window.toggleSpeed = () => {
+        if (speedLevel === 1) speedLevel = 2;
+        else if (speedLevel === 2) speedLevel = 4;
+        else if (speedLevel === 4) speedLevel = 8;
+        else speedLevel = 1;
+        
+        // 실제 게임 속도는 (배수 * 기본보정값)
+        GAME_SPEED = speedLevel * BASE_SPEED_FACTOR;
+        
+        document.getElementById('btn-speed').innerText = speedLevel + 'x';
+    };
+
+    // 도움말 토글 함수
+    let isHelpOpen = false;
+    window.toggleHelp = () => {
+        isHelpOpen = !isHelpOpen;
+        const btn = document.getElementById('btn-help');
+        const popup = document.getElementById('help-popup');
+        
+        if (isHelpOpen) {
+            btn.classList.add('active');
+            popup.style.display = 'block';
+        } else {
+            btn.classList.remove('active');
+            popup.style.display = 'none';
+        }
+    };
+
     function triggerSantaMode() {
         isSantaMode = true;
         if(santaTimer) clearTimeout(santaTimer);
@@ -810,7 +963,26 @@
 
     class Particle {
         constructor(tx,ty,c){this.targetX=tx;this.targetY=ty;this.baseColor=c;this.x=zones.hopper.x+(Math.random()-0.5)*40;this.y=zones.hopper.y-20;this.state='WAITING';this.carrier=null;}
-        update(){if(this.state==='WAITING')return;if(this.state==='FALLING'){this.y+=4;if(this.y>=zones.beltStart.y-10){this.y=zones.beltStart.y-10+Math.random()*5;this.state='ON_BELT';}}else if(this.state==='ON_BELT'){const dx=zones.beltEnd.x-zones.beltStart.x,dy=zones.beltEnd.y-zones.beltStart.y,d=Math.sqrt(dx*dx+dy*dy);this.x+=(dx/d)*CONFIG.beltSpeed;this.y+=(dy/d)*CONFIG.beltSpeed;if(this.x>=zones.beltEnd.x){this.state='IN_STORAGE';this.x=zones.storage.x+(Math.random()-0.5)*30;this.y=zones.storage.y+(Math.random()-0.5)*20;}}else if(this.state==='RETURNING'){const dx=zones.hopper.x-this.x,dy=zones.hopper.y-this.y;this.x+=dx*0.1;this.y+=dy*0.1;if(Math.abs(dy)<5)this.state='WAITING';}}
+        update(){
+            // 일시정지 시 업데이트 건너뜀
+            if (isGamePaused) return;
+
+            if(this.state==='WAITING')return;
+            if(this.state==='FALLING'){
+                this.y+=4 * GAME_SPEED; // 속도 적용
+                if(this.y>=zones.beltStart.y-10){this.y=zones.beltStart.y-10+Math.random()*5;this.state='ON_BELT';}
+            } else if(this.state==='ON_BELT'){
+                const dx=zones.beltEnd.x-zones.beltStart.x,dy=zones.beltEnd.y-zones.beltStart.y,d=Math.sqrt(dx*dx+dy*dy);
+                this.x+=(dx/d)*CONFIG.beltSpeed * GAME_SPEED; // 속도 적용
+                this.y+=(dy/d)*CONFIG.beltSpeed * GAME_SPEED; // 속도 적용
+                if(this.x>=zones.beltEnd.x){this.state='IN_STORAGE';this.x=zones.storage.x+(Math.random()-0.5)*30;this.y=zones.storage.y+(Math.random()-0.5)*20;}
+            } else if(this.state==='RETURNING'){
+                const dx=zones.hopper.x-this.x,dy=zones.hopper.y-this.y;
+                this.x+=dx*0.1 * GAME_SPEED; // 속도 적용
+                this.y+=dy*0.1 * GAME_SPEED; // 속도 적용
+                if(Math.abs(dy)<5)this.state='WAITING';
+            }
+        }
         draw(){if(this.state==='WAITING')return;ctx.fillStyle=this.baseColor;if(this.state==='PLACED')ctx.fillRect(this.x,this.y,CONFIG.pixelSize,CONFIG.pixelSize);else{ctx.beginPath();ctx.arc(this.x,this.y,CONFIG.pixelSize/2+1,0,Math.PI*2);ctx.fill();}}
         reset(){this.state='RETURNING';this.carrier=null;}
     }
@@ -842,8 +1014,39 @@
                 vacationCounter = 0;
             }
         }
-        update() { if(this.isPaused)return; this.animFrame+=0.1; if(this.role==='BUILDER')this.updateBuilder(); else if(this.role==='OFFICE')this.updateOffice(); }
-        updateOffice(){if(this.busyState==='TYPING'){this.busyTimer--;if(this.busyTimer<=0){if(Math.random()<0.05){this.busyState='PATROL';this.busyTargetX=zones.office.x+Math.random()*zones.office.w;this.busyTargetY=zones.office.y+Math.random()*zones.office.h;}else{this.busyTimer=200+Math.random()*400;}}}else if(this.busyState==='PATROL'){if(this.moveTo(this.busyTargetX,this.busyTargetY)){this.busyState='WAITING_TO_RETURN';this.busyTimer=50+Math.random()*100;}}else if(this.busyState==='WAITING_TO_RETURN'){this.busyTimer--;if(this.busyTimer<=0)this.busyState='RETURN';}else if(this.busyState==='RETURN'){if(this.moveTo(this.seatX,this.seatY)){this.busyState='TYPING';this.busyTimer=300+Math.random()*500;}}}
+        
+        update() { 
+            if(this.isPaused) return; 
+            
+            // 일시정지 시 애니메이션 프레임 업데이트 중단
+            if (!isGamePaused) {
+                this.animFrame += 0.1 * GAME_SPEED; // 애니메이션 속도도 반영
+                if(this.role==='BUILDER') this.updateBuilder(); 
+                else if(this.role==='OFFICE') this.updateOffice(); 
+            }
+        }
+
+        updateOffice(){
+            if(this.busyState==='TYPING'){
+                this.busyTimer -= 1 * GAME_SPEED; // 타이머 감소 속도 적용
+                if(this.busyTimer<=0){
+                    if(Math.random()<0.05){this.busyState='PATROL';this.busyTargetX=zones.office.x+Math.random()*zones.office.w;this.busyTargetY=zones.office.y+Math.random()*zones.office.h;}
+                    else{this.busyTimer=200+Math.random()*400;}
+                }
+            } else if(this.busyState==='PATROL'){
+                if(this.moveTo(this.busyTargetX,this.busyTargetY)){
+                    this.busyState='WAITING_TO_RETURN';this.busyTimer=50+Math.random()*100;
+                }
+            } else if(this.busyState==='WAITING_TO_RETURN'){
+                this.busyTimer -= 1 * GAME_SPEED;
+                if(this.busyTimer<=0)this.busyState='RETURN';
+            } else if(this.busyState==='RETURN'){
+                if(this.moveTo(this.seatX,this.seatY)){
+                    this.busyState='TYPING';this.busyTimer=300+Math.random()*500;
+                }
+            }
+        }
+
         updateBuilder(){
             if(!this.targetItem){
                 const job=particles.find(p=>p.state==='IN_STORAGE'&&!p.carrier);
@@ -854,6 +1057,7 @@
                 else if(this.state==='DELIVERING'){this.targetItem.x=this.x;this.targetItem.y=this.y-12;if(this.moveTo(this.targetItem.targetX,this.targetItem.targetY)){this.targetItem.state='PLACED';this.targetItem.x=this.targetItem.targetX;this.targetItem.y=this.targetItem.targetY;this.targetItem.carrier=null;this.targetItem=null;this.state='IDLE';}}
             }
         }
+
         performBusyAction(){
             if(this.busyTimer<=0){
                 const r=Math.random();
@@ -861,12 +1065,24 @@
                 else if(r<0.8)this.busyState='CLEAN'; else this.busyState='HAMMER';
                 this.busyTimer=60+Math.random()*120;
             }
-            this.busyTimer--;
+            this.busyTimer -= 1 * GAME_SPEED; // 타이머 감소 속도 적용
+            
             if(this.busyState==='PATROL')this.moveTo(this.busyTargetX,this.busyTargetY);
-            else if(this.busyState==='CLEAN')this.x+=Math.sin(Date.now()*0.02)*0.5;
+            else if(this.busyState==='CLEAN')this.x+=Math.sin(Date.now()*0.02 * GAME_SPEED)*0.5 * GAME_SPEED;
             else if(this.busyState==='HAMMER'){if(Math.abs(this.x-canvas.width/2)>300)this.moveTo(canvas.width/2,canvas.height/2);}
         }
-        moveTo(tx,ty){const dx=tx-this.x,dy=ty-this.y,d=Math.sqrt(dx*dx+dy*dy);if(d<4){this.x=tx;this.y=ty;return true;}const s=this.role==='OFFICE'?1.5:4;this.x+=(dx/d)*s;this.y+=(dy/d)*s;return false;}
+
+        moveTo(tx,ty){
+            const dx=tx-this.x,dy=ty-this.y,d=Math.sqrt(dx*dx+dy*dy);
+            const baseSpeed = this.role==='OFFICE'?1.5:4;
+            const moveStep = baseSpeed * GAME_SPEED; // 속도 적용
+
+            if(d < moveStep || d < 4){this.x=tx;this.y=ty;return true;}
+            
+            this.x+=(dx/d)*moveStep;
+            this.y+=(dy/d)*moveStep;
+            return false;
+        }
 
         draw() {
             ctx.save(); ctx.translate(this.x, this.y);
@@ -884,7 +1100,10 @@
                 else { indicatorColor = '#2979ff'; ctx.shadowBlur = 0; }
             } else { ctx.shadowBlur = 0; }
             
-            if(!this.isPaused && (this.busyState==='HAMMER'||(this.role==='OFFICE'&&this.busyState==='TYPING'))) ctx.translate(0,Math.sin(Date.now()*0.05));
+            // 일시정지 아닐 때만 움직임 효과 적용
+            const sway = isGamePaused ? 0 : Math.sin(Date.now()*0.05 * GAME_SPEED);
+            if(!this.isPaused && (this.busyState==='HAMMER'||(this.role==='OFFICE'&&this.busyState==='TYPING'))) ctx.translate(0, sway);
+            
             if (indicatorColor) { ctx.fillStyle = indicatorColor; ctx.beginPath(); ctx.arc(0, -18, 3.5, 0, Math.PI*2); ctx.fill(); }
             
             const w=12,h=20; 
@@ -955,10 +1174,10 @@
             
             if (this.role === 'BUILDER' && !this.isPaused) {
                 if (this.busyState === 'CLEAN') {
-                    ctx.save(); ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02)*8, 18); ctx.stroke();
-                    ctx.fillStyle='#d7ccc8'; ctx.beginPath(); ctx.arc(4 + Math.sin(Date.now()*0.02)*8, 18, 3, 0, Math.PI); ctx.fill(); ctx.restore();
+                    ctx.save(); ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 5); ctx.lineTo(4 + Math.sin(Date.now()*0.02 * GAME_SPEED)*8, 18); ctx.stroke();
+                    ctx.fillStyle='#d7ccc8'; ctx.beginPath(); ctx.arc(4 + Math.sin(Date.now()*0.02 * GAME_SPEED)*8, 18, 3, 0, Math.PI); ctx.fill(); ctx.restore();
                 } else if (this.busyState === 'HAMMER') {
-                    ctx.save(); ctx.translate(6, 0); ctx.rotate(Math.sin(Date.now() * 0.2) * 0.8);
+                    ctx.save(); ctx.translate(6, 0); ctx.rotate(Math.sin(Date.now() * 0.2 * GAME_SPEED) * 0.8);
                     ctx.fillStyle = '#5d4037'; ctx.fillRect(0, -10, 2, 12); ctx.fillStyle = '#555'; ctx.fillRect(-3, -12, 8, 4); ctx.restore();
                 }
             }
@@ -1020,7 +1239,12 @@
     function drawEnvironment() {
         ctx.fillStyle = '#999'; ctx.beginPath(); ctx.moveTo(zones.hopper.x - 30, zones.hopper.y - 50); ctx.lineTo(zones.hopper.x + 30, zones.hopper.y - 50); ctx.lineTo(zones.hopper.x + 10, zones.hopper.y); ctx.lineTo(zones.hopper.x - 10, zones.hopper.y); ctx.fill();
         ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 40; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltEnd.x, zones.beltEnd.y); ctx.stroke();
-        beltOffset -= CONFIG.beltSpeed; ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 30; ctx.setLineDash([10, 20]); ctx.lineDashOffset = beltOffset; ctx.beginPath(); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltEnd.x, zones.beltEnd.y); ctx.stroke(); ctx.setLineDash([]);
+        
+        if (!isGamePaused) {
+            beltOffset -= CONFIG.beltSpeed * GAME_SPEED;
+        }
+        
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 30; ctx.setLineDash([10, 20]); ctx.lineDashOffset = beltOffset; ctx.beginPath(); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltEnd.x, zones.beltEnd.y); ctx.stroke(); ctx.setLineDash([]);
         ctx.lineWidth = 5; ctx.strokeStyle = '#64748b'; ctx.beginPath(); ctx.moveTo(zones.beltEnd.x, zones.beltEnd.y); ctx.lineTo(zones.beltEnd.x, canvas.height); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltStart.x, canvas.height); ctx.stroke();
         const lx = canvas.width/2 - 250; const ly = canvas.height/2 + 60; ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - 120); ctx.moveTo(lx + 30, ly); ctx.lineTo(lx + 30, ly - 120); for(let i=0; i<5; i++) { ctx.moveTo(lx, ly - 20 - (i*20)); ctx.lineTo(lx+30, ly - 20 - (i*20)); } ctx.stroke();
         ctx.fillStyle = '#f8fafc'; ctx.fillRect(zones.office.x, zones.office.y, zones.office.w, zones.office.h); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(zones.office.x, canvas.height - 50, zones.office.w, 50);
@@ -1041,13 +1265,29 @@
     }
     
     function animate() {
-        const now = Date.now(); if (now - lastDropTime > CONFIG.dropInterval) { const p = particles.find(p => p.state === 'WAITING'); if (p) { p.state = 'FALLING'; lastDropTime = now; } }
-        ctx.clearRect(0, 0, canvas.width, canvas.height); drawEnvironment(); fairies.forEach(f => { f.update(); f.draw(); }); particles.forEach(p => { p.update(); p.draw(); });
+        if (!isGamePaused) {
+            const now = Date.now(); 
+            // 딜레이를 속도에 반비례하게 줄여서 드랍 빈도 조절 (속도 빠르면 더 자주 떨어짐)
+            if (now - lastDropTime > CONFIG.dropInterval / GAME_SPEED) { 
+                const p = particles.find(p => p.state === 'WAITING'); 
+                if (p) { p.state = 'FALLING'; lastDropTime = now; } 
+            }
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        drawEnvironment(); 
+        
+        fairies.forEach(f => { f.update(); f.draw(); }); 
+        particles.forEach(p => { p.update(); p.draw(); });
+        
         if (hoveredFairy) { hoveredFairy.drawBubble(); canvas.style.cursor = 'pointer'; } else { canvas.style.cursor = 'default'; }
         
         const placedCount = particles.filter(p => p.state === 'PLACED').length;
         isLogoComplete = (placedCount === particles.length && particles.length > 0);
-        monitorHueOffset += isLogoComplete ? 5 : 1; 
+        
+        if (!isGamePaused) {
+            monitorHueOffset += (isLogoComplete ? 5 : 1) * GAME_SPEED; 
+        }
 
         ctx.save(); 
         if (isLogoComplete) {
@@ -1085,6 +1325,8 @@
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn') || e.target.closest('.modal-window')) return;
         const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
         
+        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
+        
         let touchedFairy = false;
         fairies.forEach(f => {
             if (Math.abs(tx - f.x) < 40 && Math.abs(ty - f.y) < 50) {
@@ -1108,6 +1350,8 @@
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('.modal-window') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
         
+        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
+
         let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); if (clickedFairy) return;
         if (cx > canvas.width/2 - 250 && cx < canvas.width/2 + 250 && cy > canvas.height/2 - 80 && cy < canvas.height/2 + 80) { 
             particles.forEach(p => { if (p.state === 'PLACED') p.reset(); }); 
@@ -1120,6 +1364,8 @@
     window.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
         
+        // 커서 포인터 변경 로직 (작업반장 부분 제거)
+
         let closest = null; let minDist = 30; 
         fairies.forEach(f => { const dx = mouseX - f.x; const dy = mouseY - f.y; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < minDist) { minDist = dist; closest = f; } }); 
         hoveredFairy = closest;
