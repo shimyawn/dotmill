@@ -20,10 +20,6 @@
         /* UI 레이아웃 */
         #ui { position: absolute; top: 30px; left: 30px; pointer-events: none; color: #333; z-index: 10; transition: all 0.3s; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
         
-        /* 헤더 영역 */
-        .header-row { display: flex; align-items: center; gap: 15px; margin-bottom: 4px; }
-        h1 { margin: 0; font-size: 1.8rem; color: #2c3e50; font-weight: 800; letter-spacing: -0.02em; line-height: 1; } 
-        
         /* 시뮬레이션 컨트롤 */
         #sim-controls { display: flex; gap: 6px; pointer-events: auto; }
         #sim-controls button {
@@ -85,14 +81,24 @@
         .yellow-txt { color: #ef4444; font-weight: 700; } 
         .gray-txt { color: #555; font-weight: 700; }
 
-        /* 안내 멘트 (우측 상단) */
+        /* 안내 멘트 (우측 상단) - 클릭 가능하도록 pointer-events: auto */
         #guide-text {
-            position: absolute; top: 30px; right: 30px; text-align: right; color: #444; pointer-events: none; z-index: 10;
+            position: absolute; top: 30px; right: 30px; text-align: right; color: #444; pointer-events: auto; z-index: 10;
             background: rgba(255,255,255,0.9); padding: 18px 22px; border-radius: 16px; backdrop-filter: blur(8px); 
             box-shadow: 0 4px 20px rgba(0,0,0,0.08); letter-spacing: -0.01em; border: 1px solid rgba(255,255,255,0.5);
+            cursor: pointer; user-select: none;
         }
         #guide-text h2 { margin: 0 0 10px 0; font-size: 1.1rem; color: #1e293b; font-weight: 800; }
         #guide-text p { margin: 0; font-size: 0.9rem; line-height: 1.6; color: #475569; font-weight: 500; word-break: keep-all; }
+
+        /* 흔들림 애니메이션 */
+        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
 
         #audio-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background-color: #2c3e50; color: white; border: 3px solid white; border-radius: 50%; cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.2s; }
         #audio-btn:active { transform: scale(0.9); }
@@ -217,10 +223,12 @@
 <body>
 
     <div id="ui">
-        <!-- 속도 및 일시정지 컨트롤 + 도움말 -->
+        <!-- 속도 및 일시정지 컨트롤 + 오디오 + 도움말 + 리셋 -->
         <div id="sim-controls">
             <button onclick="togglePause()" id="btn-pause" title="일시정지/재생">⏸</button>
             <button onclick="toggleSpeed()" id="btn-speed" title="속도 조절">1x</button>
+            <button onclick="resetSimulation()" id="btn-reset" title="작업 초기화">🔄</button>
+            <button id="btn-audio" title="배경음악 On/Off">🔇</button>
             <button onclick="toggleHelp()" id="btn-help" title="도움말 및 사용법">?</button>
         </div>
 
@@ -231,7 +239,7 @@
                 <div class="help-row"><div class="dot green"></div> 방금 도착한 메시지 알림</div>
                 <div class="help-row"><div class="dot blue"></div> 파란 옷을 입은 동료들</div>
                 <div class="help-row"><div class="dot yellow"></div> 빨간 우편함: 내 메시지함</div>
-                <div class="help-row"><div class="dot gray"></div> 로고 클릭: 작업 리셋</div>
+                <div class="help-row"><div class="dot gray"></div> 🔄 버튼: 작업 리셋</div>
             </div>
             <div class="help-section">
                 <span class="help-title">📨 메시지 보내는 법</span>
@@ -250,7 +258,8 @@
         <div id="mailbox-text">내 우편함</div>
     </div>
 
-    <div id="guide-text">
+    <!-- 우측 상단 안내 텍스트 (이스터에그 트리거) -->
+    <div id="guide-text" onclick="handleGuideClick()">
         <h2>2026 닷밀 신년맞이 롤링페이퍼 📜</h2>
         <p>
             여기는 DOT을 굴려 멋진 것들을 만드는 방앗간, DOMILL입니다.<br>
@@ -258,8 +267,6 @@
             그리고 동료들에게 익명으로 메시지를 전하세요.
         </p>
     </div>
-
-    <button id="audio-btn">🔇</button>
 
     <div id="custom-alert">
         <span id="alert-check">✅</span>
@@ -358,7 +365,8 @@
         audioFiles[name] = audio;
     });
 
-    const audioBtn = document.getElementById('audio-btn');
+    // 변경된 오디오 버튼 ID 적용
+    const audioBtn = document.getElementById('btn-audio');
     audioBtn.addEventListener('click', () => {
         if (isBgmOn) {
             audioFiles['bgm'].pause(); audioBtn.innerText = '🔇'; isBgmOn = false;
@@ -917,6 +925,10 @@
     let GAME_SPEED = speedLevel * BASE_SPEED_FACTOR; // 실제 연산용 속도
     let isGamePaused = false;
 
+    // 이스터 에그 관련 변수
+    let clickCount = 0;
+    let clickTimer = null;
+
     // 일시정지 토글 함수
     window.togglePause = () => {
         isGamePaused = !isGamePaused;
@@ -953,6 +965,88 @@
         }
     };
 
+    // 이스터 에그 핸들러
+    window.handleGuideClick = () => {
+        const guideText = document.getElementById('guide-text');
+        
+        // 쉐이크 애니메이션 적용
+        guideText.classList.remove('shake');
+        void guideText.offsetWidth; // 리플로우 강제 (애니메이션 재시작용)
+        guideText.classList.add('shake');
+        
+        // 클릭 카운트 증가
+        clickCount++;
+        
+        // 타이머 리셋 (1초 안에 연속 클릭해야 함)
+        if (clickTimer) clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => {
+            clickCount = 0;
+        }, 1000);
+        
+        // 10회 도달 시
+        if (clickCount >= 10) {
+            clickCount = 0; // 리셋
+            triggerDotPour();
+        }
+    };
+
+    function triggerDotPour() {
+        const guideText = document.getElementById('guide-text');
+        const rect = guideText.getBoundingClientRect();
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.bottom; // 박스 아래에서 쏟아지게
+        
+        for(let i=0; i<10; i++) {
+             // 기존 particles 배열에서 랜덤한 타겟 좌표를 가져옴 (로고를 구성하는 픽셀 중 하나)
+            let targetP = null;
+            if (particles.length > 0) {
+                 targetP = particles[Math.floor(Math.random() * particles.length)];
+            }
+            
+            // 새 파티클 생성
+            const p = new Particle(0, 0, CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)]);
+            
+            // 초기 위치 설정 (박스 밑)
+            p.x = startX + (Math.random() - 0.5) * 50;
+            p.y = startY;
+            
+            // 상태 설정: 'FALLING_FROM_TEXT'
+            p.state = 'FALLING_FROM_TEXT';
+            
+            // 목표 지점 설정 (로고의 픽셀 위치)
+            if (targetP) {
+                p.targetX = targetP.targetX;
+                p.targetY = targetP.targetY;
+            } else {
+                // 파티클이 하나도 없을 경우 (거의 없겠지만) 화면 중앙으로
+                p.targetX = canvas.width/2 + (Math.random()-0.5)*100;
+                p.targetY = canvas.height/2 + (Math.random()-0.5)*50;
+            }
+            
+            particles.push(p);
+        }
+    }
+    
+    // 리셋 함수 추가
+    window.resetSimulation = () => {
+        particles.forEach(p => { 
+            if (p.state === 'PLACED' || p.state === 'ON_BELT' || p.state === 'IN_STORAGE' || p.state === 'CARRIED' || p.state === 'DELIVERING' || p.state === 'FALLING') {
+                p.reset(); 
+            }
+        });
+        fairies.forEach(f => { 
+            if(!f.isPaused) { 
+                if(f.targetItem) { 
+                    f.targetItem.reset(); 
+                    f.targetItem = null; 
+                } 
+                f.state = 'IDLE'; 
+            } 
+        });
+        isLogoComplete = false;
+        playSound('reset');
+    };
+
     function triggerSantaMode() {
         isSantaMode = true;
         if(santaTimer) clearTimeout(santaTimer);
@@ -966,6 +1060,17 @@
         update(){
             // 일시정지 시 업데이트 건너뜀
             if (isGamePaused) return;
+            
+            if (this.state === 'FALLING_FROM_TEXT') {
+                this.y += 5 * GAME_SPEED; // 빨리 떨어짐
+                // 바닥(storage y 위치 정도)에 닿으면 IN_STORAGE로 변경
+                if (this.y >= zones.storage.y) {
+                    this.state = 'IN_STORAGE';
+                    // x 위치를 약간 랜덤하게 퍼트림 (바닥에 쌓인 느낌)
+                    this.y = zones.storage.y + (Math.random()-0.5)*20;
+                }
+                return;
+            }
 
             if(this.state==='WAITING')return;
             if(this.state==='FALLING'){
@@ -1304,7 +1409,10 @@
             const response = await fetch(GOOGLE_SCRIPT_URL);
             const data = await response.json(); 
             if (data && data.length > 0) {
-                const recent10 = data.slice(0, 10);
+                // [수정] 최신순으로 정렬 (뒤에서부터 가져오거나 reverse)
+                // 원본 데이터를 복사([...data])한 뒤 뒤집어서(.reverse()) 최신 10개를 자릅니다(.slice(0, 10))
+                const recent10 = [...data].reverse().slice(0, 10);
+                
                 const shuffledFairies = [...fairies].sort(() => 0.5 - Math.random());
                 recent10.forEach((row, idx) => {
                     if (idx < shuffledFairies.length) {
@@ -1339,9 +1447,7 @@
         if (!touchedFairy) {
             const cx = canvas.width / 2; const cy = canvas.height / 2;
             if (tx > cx - 200 && tx < cx + 200 && ty > cy - 80 && ty < cy + 80) {
-                particles.forEach(p => { if (p.state === 'PLACED') p.reset(); });
-                fairies.forEach(f => { if(!f.isPaused) { if(f.targetItem) { f.targetItem.reset(); f.targetItem = null; } f.state = 'IDLE'; } });
-                playSound('reset');
+                // [수정됨] 로고 클릭 초기화 기능 삭제 (이제 리셋 버튼으로만 가능)
             }
         }
     }, { passive: false });
@@ -1354,9 +1460,7 @@
 
         let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); if (clickedFairy) return;
         if (cx > canvas.width/2 - 250 && cx < canvas.width/2 + 250 && cy > canvas.height/2 - 80 && cy < canvas.height/2 + 80) { 
-            particles.forEach(p => { if (p.state === 'PLACED') p.reset(); }); 
-            fairies.forEach(f => { if(!f.isPaused) { if(f.targetItem) { f.targetItem.reset(); f.targetItem = null; } f.state = 'IDLE'; } }); 
-            playSound('reset');
+            // [수정됨] 로고 클릭 초기화 기능 삭제 (이제 리셋 버튼으로만 가능)
         }
     });
 
