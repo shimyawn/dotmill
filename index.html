@@ -316,7 +316,12 @@
     const customAlert = document.getElementById('custom-alert');
 
     // [커스텀 스타일 데이터]
-    const CUSTOM_SHIRT_COLORS = ['#3b82f6', '#1e293b', '#64748b']; // Blue, Black, Gray
+    // 파랑, 검정, 회색 + 무지개색 (빨, 주, 노, 초, 하늘, 남, 보라) 총 10색
+    const CUSTOM_SHIRT_COLORS = [
+        '#3b82f6', '#1e293b', '#64748b', // Blue, Black, Gray (기존)
+        '#ef4444', '#f97316', '#eab308', // Red, Orange, Yellow
+        '#22c55e', '#0ea5e9', '#6366f1', '#a855f7' // Green, Sky, Indigo, Purple
+    ]; 
     const HAIR_ICONS = ['🧑', '🦱', '👱', '👩']; // 4 styles
     const ACC_ICONS = ['❌', '🎄', '🏮']; // 3 styles
 
@@ -432,21 +437,17 @@
         sendBtn.disabled = true; const originalPlaceholder = msgInput.placeholder;
         msgInput.value = ''; msgInput.placeholder = '전송 중... 🚀';
         
-        // [중요] 스타일 데이터를 JSON 문자열로 변환하여 'style' 필드에 담아 전송
-        // Google Apps Script에서 이 'style' 필드를 받아 4번째 열에 저장해야 합니다.
         const styleData = JSON.stringify(currentStyle);
         const finalPayload = { name: receiver, text: text, style: styleData };
 
         try {
             await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalPayload) });
-            // 전송 성공 시 로컬 화면에도 즉시 반영 (스타일 포함)
-            // [버그 수정] currentStyle을 참조가 아닌 복사본으로 전달해야, 
-            // 이후 스타일 변경 시 기존 메시지의 스타일이 바뀌지 않습니다.
+            
             if (window.distributeSingleMessage) {
                 window.distributeSingleMessage({ 
                     name: receiver, 
                     text: text, 
-                    style: { ...currentStyle } // 객체 복사
+                    style: { ...currentStyle } 
                 });
             }
             playSound('sent'); showCustomAlert();
@@ -463,7 +464,6 @@
                 const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div'); div.className = 'list-item';
                 
-                // row[2]는 메시지 텍스트
                 let displayMsg = row[2] || "";
 
                 let displayReceiver = row[1];
@@ -503,10 +503,8 @@
             this.x = Math.random() * (w - 60) + 30;
             this.y = Math.random() * (h - 100) + 80; 
             
-            // [중요] 메시지에 스타일이 있으면 적용, 없으면 기본값
             this.style = msg.style || { hair: 0, shirt: 0, acc: 0 };
             
-            // 셔츠 색상 매핑
             this.shirtColor = CUSTOM_SHIRT_COLORS[this.style.shirt] || CUSTOM_SHIRT_COLORS[0];
 
             this.bodyOffset = Math.random() * 100;
@@ -570,27 +568,48 @@
         drawHair(ctx) {
             ctx.fillStyle = '#4a3b2a';
             const h = this.style.hair;
-            if (h === 0) { // 단정 (🧑)
+            
+            if (h === 0) { // 기본/짧은머리 (단정한 숏컷)
                 ctx.fillRect(-7, -26, 14, 4); 
-            } else if (h === 1) { // 더벅 (🦱)
-                ctx.beginPath(); ctx.arc(0, -24, 8, Math.PI, 0); ctx.fill();
-            } else if (h === 2) { // 꽁지 (👱)
+                ctx.beginPath(); ctx.moveTo(-7, -24); ctx.lineTo(7, -24); ctx.quadraticCurveTo(8, -24, 8, -20); ctx.lineTo(-8, -20); ctx.quadraticCurveTo(-8, -24, -7, -24); ctx.fill();
+            } else if (h === 1) { // 파마머리 (동글동글)
+                ctx.beginPath(); 
+                ctx.arc(0, -25, 8, Math.PI, 0); 
+                ctx.arc(-6, -23, 4, 0, Math.PI*2);
+                ctx.arc(6, -23, 4, 0, Math.PI*2);
+                ctx.arc(0, -28, 4, 0, Math.PI*2);
+                ctx.fill();
+            } else if (h === 2) { // 묶음머리 (꽁지)
                 ctx.fillRect(-7, -26, 14, 4); 
-                ctx.beginPath(); ctx.arc(0, -28, 3, 0, Math.PI*2); ctx.fill();
-            } else { // 긴머리 (👩)
+                ctx.beginPath(); ctx.arc(0, -28, 3.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(0, -28); ctx.quadraticCurveTo(5, -32, 6, -26); ctx.stroke();
+            } else { // 긴머리 (단발~장발)
                 ctx.fillRect(-8, -26, 16, 6); 
-                ctx.fillRect(-9, -20, 3, 10); ctx.fillRect(6, -20, 3, 10);
+                ctx.fillRect(-9, -22, 4, 12); ctx.fillRect(5, -22, 4, 12); // 양옆 머리 길게
             }
         }
 
         drawAcc(ctx) {
             const a = this.style.acc;
-            if (a === 1) { // 크리스마스 (🎄)
-                ctx.strokeStyle = '#b45309'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(-3, -16); ctx.lineTo(-6, -22); ctx.moveTo(3, -16); ctx.lineTo(6, -22); ctx.stroke();
-            } else if (a === 2) { // 한복 (🏮)
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                ctx.fillRect(-w/2, -h/2, 3, h/2); ctx.fillRect(w/2-3, -h/2, 3, h/2);
+            if (a === 1) { // 루돌프 (더 입체적인 뿔)
+                ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+                // 왼쪽 뿔
+                ctx.beginPath(); ctx.moveTo(-3, -25); ctx.lineTo(-8, -32); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-6, -29); ctx.lineTo(-4, -33); ctx.stroke();
+                // 오른쪽 뿔
+                ctx.beginPath(); ctx.moveTo(3, -25); ctx.lineTo(8, -32); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(6, -29); ctx.lineTo(4, -33); ctx.stroke();
+                // 빨간 코
+                ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(0, -18, 1.5, 0, Math.PI*2); ctx.fill();
+            } else if (a === 2) { // 한복 배자 (더 선명한 조끼 + 고름)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // 반투명 속
+                ctx.fillStyle = '#1e40af'; // 짙은 파랑 배자
+                ctx.fillRect(-8, -15, 4, 12); ctx.fillRect(4, -15, 4, 12); // 양쪽 자락
+                ctx.fillRect(-8, -15, 16, 4); // 어깨
+                
+                // 고름 (빨강)
+                ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(-1, -10); ctx.lineTo(3, -8); ctx.lineTo(3, -4); ctx.stroke();
             }
         }
 
@@ -692,7 +711,6 @@
                 const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div'); div.className = 'list-item';
                 
-                // [변경] row[2]는 메시지 텍스트
                 let displayMsg = row[2] || "";
 
                 let prefix = (row[1] === 'ALL') ? '<span style="color:#00e676; font-size:0.8rem; margin-right:5px; font-weight:bold;">[전체]</span>' : '<span style="color:#ec4899; font-size:0.8rem; margin-right:5px; font-weight:bold;">[나에게]</span>';
@@ -705,7 +723,6 @@
             displayMessages.forEach(row => {
                 const isPrivate = (row[1] !== 'ALL');
                 
-                // [변경] row[2]는 메시지, row[3]은 설정값
                 let text = row[2] || "";
                 let styleJson = row[3];
                 let style = { hair: 0, shirt: 0, acc: 0 };
@@ -777,7 +794,6 @@
     let monitorHueOffset = 0, isLogoComplete = false;
     let zones={ hopper:{x:0,y:0}, beltStart:{x:0,y:0}, beltEnd:{x:0,y:0}, storage:{x:0,y:0}, office:{x:0,y:0,w:0,h:0} };
 
-    // 산타 모드 변수
     let vacationCounter = 0;
     let isSantaMode = false;
     let santaTimer = null;
@@ -804,8 +820,6 @@
             this.isPaused=false; this.pauseTimer=null; this.busyState='NONE'; this.busyTimer=Math.random()*500;
             this.busyTargetX=0; this.busyTargetY=0; this.seatX=0; this.seatY=0;
             this.assignedMessage = null; this.assignmentTime = 0; 
-            
-            // [중요] 메시지가 부여될 때 이 변수에 {hair, shirt, acc} 객체가 들어옴
             this.customStyle = null; 
 
             if(role==='ENGINEER'){this.x=zones.beltStart.x+(zones.beltEnd.x-zones.beltStart.x)*0.5;this.y=zones.beltStart.y+30;}
@@ -855,7 +869,6 @@
         draw() {
             ctx.save(); ctx.translate(this.x, this.y);
             
-            // [중요] customStyle이 있으면(메시지 배달 중이면) 옷 색상 덮어쓰기
             let shirtColor = this.colorShirt;
             if (this.customStyle) {
                 shirtColor = CUSTOM_SHIRT_COLORS[this.customStyle.shirt] || CUSTOM_SHIRT_COLORS[0];
@@ -877,40 +890,52 @@
             ctx.fillStyle=shirtColor;ctx.fillRect(-w/2,-h/2,w,h/2); // Shirt
             ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2+2,-h/2-6,8,8); // Face
 
-            // [중요] customStyle이 있으면 헤어스타일 변경
             if (this.customStyle) {
                 ctx.fillStyle = '#4a3b2a';
                 const hr = this.customStyle.hair;
-                if (hr === 1) { // 더벅
-                    ctx.beginPath(); ctx.arc(0, -14, 6, Math.PI, 0); ctx.fill();
+                if (hr === 0) { // 기본
+                    ctx.fillRect(-7, -26, 14, 4); 
+                    ctx.beginPath(); ctx.moveTo(-7, -24); ctx.lineTo(7, -24); ctx.quadraticCurveTo(8, -24, 8, -20); ctx.lineTo(-8, -20); ctx.quadraticCurveTo(-8, -24, -7, -24); ctx.fill();
+                } else if (hr === 1) { // 더벅(파마)
+                    ctx.beginPath(); 
+                    ctx.arc(0, -25, 8, Math.PI, 0); 
+                    ctx.arc(-6, -23, 4, 0, Math.PI*2);
+                    ctx.arc(6, -23, 4, 0, Math.PI*2);
+                    ctx.arc(0, -28, 4, 0, Math.PI*2);
+                    ctx.fill();
                 } else if (hr === 2) { // 꽁지
-                    ctx.fillRect(-w/2+2, -h/2-8, 8, 3);
-                    ctx.beginPath(); ctx.arc(0, -18, 2, 0, Math.PI*2); ctx.fill();
-                } else if (hr === 3) { // 긴머리
-                    ctx.fillRect(-w/2, -h/2-8, w, 4);
-                    ctx.fillRect(-w/2-1, -h/2-6, 3, 8); ctx.fillRect(w/2-2, -h/2-6, 3, 8);
-                } else { // 기본 단정
-                    ctx.fillRect(-w/2+1, -h/2-8, 10, 3);
+                    ctx.fillRect(-7, -26, 14, 4); 
+                    ctx.beginPath(); ctx.arc(0, -28, 3.5, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(0, -28); ctx.quadraticCurveTo(5, -32, 6, -26); ctx.stroke();
+                } else { // 긴머리
+                    ctx.fillRect(-8, -26, 16, 6); 
+                    ctx.fillRect(-9, -22, 4, 12); ctx.fillRect(5, -22, 4, 12); 
                 }
             }
 
-            // [중요] customStyle이 있으면 장식 추가
             if (this.customStyle) {
                 const ac = this.customStyle.acc;
-                if (ac === 1) { // 크리스마스 뿔 (약식)
-                    ctx.strokeStyle = '#b45309'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.moveTo(-3, -16); ctx.lineTo(-6, -22); ctx.moveTo(3, -16); ctx.lineTo(6, -22); ctx.stroke();
-                } else if (ac === 2) { // 한복 배자
-                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                    ctx.fillRect(-w/2, -h/2, 3, h/2); ctx.fillRect(w/2-3, -h/2, 3, h/2);
+                if (ac === 1) { // 루돌프
+                    ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(-3, -25); ctx.lineTo(-8, -32); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(-6, -29); ctx.lineTo(-4, -33); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(3, -25); ctx.lineTo(8, -32); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(6, -29); ctx.lineTo(4, -33); ctx.stroke();
+                    ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(0, -18, 1.5, 0, Math.PI*2); ctx.fill();
+                } else if (ac === 2) { // 한복
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillStyle = '#1e40af'; 
+                    ctx.fillRect(-8, -15, 4, 12); ctx.fillRect(4, -15, 4, 12);
+                    ctx.fillRect(-8, -15, 16, 4); 
+                    ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 1.5;
+                    ctx.beginPath(); ctx.moveTo(-1, -10); ctx.lineTo(3, -8); ctx.lineTo(3, -4); ctx.stroke();
                 }
             }
 
-            // [이벤트] 산타 모드 (전직원 적용)
             if (isSantaMode) {
-                ctx.fillStyle = '#ef4444'; // 모자
+                ctx.fillStyle = '#ef4444'; 
                 ctx.beginPath(); ctx.moveTo(-6, -16); ctx.lineTo(0, -26); ctx.lineTo(6, -16); ctx.fill();
-                ctx.fillStyle = '#fff'; // 털
+                ctx.fillStyle = '#fff'; 
                 ctx.fillRect(-7, -16, 14, 3);
                 ctx.beginPath(); ctx.arc(0, -26, 2, 0, Math.PI*2); ctx.fill();
             }
@@ -942,8 +967,6 @@
             ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-6, -6); ctx.lineTo(6, -6); ctx.fill();
             ctx.shadowBlur = 0; ctx.fillStyle = '#334155'; ctx.textAlign = 'center'; ctx.fillText(msg.text, 0, -26);
             ctx.font = '500 12px "Pretendard"'; ctx.fillStyle = '#64748b'; 
-            
-            // 받는 사람 표시 (ALL/개인 구분)
             let displayName = msg.name;
             if (displayName === 'ALL') {
                 ctx.fillStyle = '#00e676';
@@ -958,10 +981,7 @@
 
     function init() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        
-        // [FIX] 캔버스 크기가 0일 경우 실행 중단 (오류 방지)
         if (canvas.width === 0 || canvas.height === 0) return;
-
         zones.hopper = { x: 100, y: 100 }; zones.beltStart = { x: 100, y: 180 }; zones.beltEnd = { x: canvas.width * 0.3, y: canvas.height * 0.6 }; zones.storage = { x: canvas.width * 0.3 + 20, y: canvas.height * 0.6 + 20 }; zones.office = { x: 0, y: canvas.height - 200, w: canvas.width, h: 200 };
         particles=[]; fairies=[];
         ctx.font = CONFIG.font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white'; ctx.fillText(CONFIG.text, canvas.width / 2, canvas.height / 2);
@@ -985,7 +1005,6 @@
         if (target) { 
             target.assignedMessage = newMsg; 
             target.assignmentTime = Date.now();
-            // [중요] 새로 도착한 메시지에 스타일이 있다면, 해당 직원에게 적용
             if(newMsg.style) target.customStyle = newMsg.style;
         }
     };
@@ -1010,7 +1029,6 @@
                 ctx.fillRect(deskX - 13, deskY - 18, 26, 20); ctx.shadowBlur = 0;
             }
         });
-        // [폰트 수정] 저작권 표시도 Pretendard
         ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 15px "Pretendard", sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
     }
     
@@ -1045,8 +1063,6 @@
                         const f = shuffledFairies[idx];
                         f.assignedMessage = { name: row[1], text: row[2] };
                         f.assignmentTime = Date.now(); 
-                        
-                        // [중요] 초기 로드 메시지에서 스타일 정보 추출 (4번째 열 = row[3])
                         let styleJson = row[3];
                         if (styleJson) {
                             try { f.customStyle = JSON.parse(styleJson); } catch(e) {}
@@ -1060,8 +1076,6 @@
     canvas.addEventListener('touchstart', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn') || e.target.closest('.modal-window')) return;
         const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
-        
-        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
         
         let touchedFairy = false;
         fairies.forEach(f => {
@@ -1086,8 +1100,6 @@
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('.modal-window') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
         
-        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
-
         let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); if (clickedFairy) return;
         if (cx > canvas.width/2 - 250 && cx < canvas.width/2 + 250 && cy > canvas.height/2 - 80 && cy < canvas.height/2 + 80) { 
             particles.forEach(p => { if (p.state === 'PLACED') p.reset(); }); 
@@ -1100,8 +1112,6 @@
     window.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
         
-        // 커서 포인터 변경 로직 (작업반장 부분 제거)
-
         let closest = null; let minDist = 30; 
         fairies.forEach(f => { const dx = mouseX - f.x; const dy = mouseY - f.y; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < minDist) { minDist = dist; closest = f; } }); 
         hoveredFairy = closest;
