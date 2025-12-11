@@ -22,11 +22,42 @@
         
         /* [PC 기본 UI] */
         #ui { position: absolute; top: 30px; left: 30px; pointer-events: none; color: #333; z-index: 10; transition: all 0.3s; }
-        h1 { margin: 0 0 5px 0; font-size: 1.8rem; color: #2c3e50; font-weight: 800; letter-spacing: -0.02em; } /* 자간 조정 */
-        .desc { font-size: 0.9rem; color: #555; background: rgba(255,255,255,0.8); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(5px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); line-height: 1.6; letter-spacing: -0.01em; }
+        h1 { margin: 0 0 5px 0; font-size: 1.8rem; color: #2c3e50; font-weight: 800; letter-spacing: -0.02em; } 
+        
+        /* 우편함 아이콘 (독립 배치) */
+        #mailbox-icon {
+            position: absolute;
+            right: 30px;
+            bottom: 210px; /* 사무실 높이(200px) 바로 위 */
+            width: 40px; height: 50px;
+            background: #ef4444; 
+            border: 4px solid #7f1d1d; 
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            z-index: 25; 
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+        #mailbox-icon:active { transform: scale(0.95); }
+        #mailbox-icon::after {
+            content: ''; position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 6px; background: #7f1d1d; border-radius: 2px;
+        }
+        #mailbox-icon::before {
+            content: ''; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+            width: 8px; height: 20px; background: #333; z-index: -1;
+        }
+        #mailbox-text {
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px;
+            font-size: 11px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s;
+        }
+        #mailbox-icon:hover #mailbox-text { opacity: 1; }
+
+        .desc { font-size: 0.9rem; color: #555; background: rgba(255,255,255,0.8); padding: 15px 20px; border-radius: 12px; backdrop-filter: blur(5px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); line-height: 1.6; letter-spacing: -0.01em; margin-top: 5px; }
         .green-txt { color: #00e676; font-weight: 700; text-shadow: 0 0 1px rgba(0,0,0,0.1); }
         .blue-txt { color: #2979ff; font-weight: 700; }
-        .yellow-txt { color: #fbc02d; font-weight: 700; }
+        .yellow-txt { color: #ef4444; font-weight: 700; } 
         .gray-txt { color: #555; font-weight: 700; }
 
         /* 우측 상단 안내 멘트 */
@@ -48,7 +79,7 @@
             padding: 10px 20px; border-radius: 25px; cursor: pointer;
             font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             transition: transform 0.2s, background 0.2s; z-index: 20; pointer-events: auto;
-            font-family: 'Pretendard', sans-serif; /* 버튼에도 폰트 강제 적용 */
+            font-family: 'Pretendard', sans-serif; 
         }
         #view-all-btn:hover { background: #0056b3; transform: scale(1.05); }
 
@@ -86,33 +117,83 @@
             animation: fadeInOut 2.5s ease forwards; width: 70%; line-height: 1.4; font-weight: 500;
         }
 
-        /* 모달 창 */
-        #list-modal {
+        /* 모달 창 기본 스타일 (PC 기준) */
+        .modal-window {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 380px; height: 550px; background: white; border-radius: 20px;
+            width: 800px; height: 600px; /* 기본은 넓게 */
+            background: white; border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.2); z-index: 100;
             flex-direction: column; overflow: hidden; border: 1px solid #f1f1f1;
-            animation: fadeIn 0.3s ease; max-width: 90%; max-height: 80%;
+            animation: fadeIn 0.3s ease; max-width: 90%; max-height: 90%;
         }
-        #modal-header { padding: 20px 25px; background: #fff; border-bottom: 1px solid #f1f1f1; font-weight: 700; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; color: #1e293b; }
-        #close-modal { cursor: pointer; font-size: 1.5rem; color: #94a3b8; transition: color 0.2s; }
-        #close-modal:hover { color: #475569; }
-        #msg-list { flex: 1; overflow-y: auto; padding: 0; background: #f8fafc; }
+        /* 목록 모달은 조금 작게 유지 */
+        #list-modal { width: 400px; height: 600px; }
+
+        .modal-header { padding: 20px 25px; background: #fff; border-bottom: 1px solid #f1f1f1; font-weight: 700; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; color: #1e293b; z-index: 10; position: relative;}
+        
+        /* 보기 모드 토글 스위치 */
+        .view-toggle { display: flex; background: #f1f5f9; border-radius: 20px; padding: 4px; gap: 4px; font-size: 0.85rem; font-weight: 600; margin-left: auto; margin-right: 15px; }
+        .view-toggle label { cursor: pointer; padding: 6px 12px; border-radius: 16px; color: #64748b; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+        .view-toggle label:hover { color: #334155; }
+        .view-toggle input[type="radio"] { display: none; }
+        .view-toggle input[type="radio"]:checked + span { color: #0f172a; }
+        .view-toggle label.active { background: white; color: #0ea5e9; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        .close-modal-btn { cursor: pointer; font-size: 1.5rem; color: #94a3b8; transition: color 0.2s; margin-left: 0; }
+        .close-modal-btn:hover { color: #475569; }
+        
+        .msg-list-container { flex: 1; overflow-y: auto; padding: 0; background: #f8fafc; }
+        
         .list-item { padding: 20px 25px; border-bottom: 1px solid #f1f5f9; background: white; transition: background 0.2s; }
         .list-item:hover { background: #f8fafc; }
         .list-item:last-child { border-bottom: none; }
         .list-date { font-size: 0.8rem; color: #94a3b8; margin-bottom: 6px; font-weight: 500; }
-        .list-name { font-weight: 700; color: #0ea5e9; margin-right: 6px; font-size: 0.95rem; }
+        .list-receiver { font-weight: 700; color: #0ea5e9; margin-right: 6px; font-size: 0.95rem; }
         .list-text { color: #334155; font-size: 1rem; word-break: break-all; line-height: 1.5; font-weight: 400; }
         .empty-msg { text-align: center; padding: 40px; color: #94a3b8; font-size: 0.95rem; }
+        
+        #my-msg-auth { padding: 20px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; z-index: 10; position: relative; }
+        #my-name-input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-family: 'Pretendard'; }
+        #my-msg-btn { background: #0ea5e9; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Pretendard'; }
+        #my-msg-btn:hover { background: #0284c7; }
+
+        /* 내 우편함 콘텐츠 영역 (리스트/캔버스 스위칭용) */
+        #mailbox-content-area { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* 내 우편함 캔버스 컨테이너 */
+        #mailbox-canvas-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a; /* 딥 네이비 배경 */
+            overflow: hidden;
+            display: none; /* 초기 상태 */
+        }
+        #mailbox-bg-canvas { width: 100%; height: 100%; }
+        #mailbox-placeholder {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #94a3b8; text-align: center; width: 100%; pointer-events: none; line-height: 1.6;
+        }
+        
+        /* 내 우편함 리스트 컨테이너 */
+        #my-msg-list-container {
+            flex: 1; overflow-y: auto; background: #f8fafc;
+            display: none; /* 초기 상태 */
+        }
+
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 90; backdrop-filter: blur(4px); }
 
         /* 입력바 스타일 */
-        #input-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 520px; background: rgba(255, 255, 255, 0.95); padding: 12px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); display: flex; gap: 8px; z-index: 30; border: 1px solid #e2e8f0; backdrop-filter: blur(10px); }
-        #name-input { width: 80px; padding: 12px; border: none; border-radius: 25px; background: #f1f5f9; text-align: center; outline: none; font-size: 16px; font-family: 'Pretendard', sans-serif; font-weight: 500; color: #334155; } 
-        #msg-input { flex: 1; padding: 12px 20px; border: none; border-radius: 25px; background: #f1f5f9; outline: none; font-size: 16px; font-family: 'Pretendard', sans-serif; color: #334155; }
+        #input-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 550px; background: rgba(255, 255, 255, 0.95); padding: 10px 14px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 8px; z-index: 30; border: 1px solid #e2e8f0; backdrop-filter: blur(10px); }
+        
+        .to-all-wrapper { display: flex; align-items: center; white-space: nowrap; font-size: 14px; font-weight: 600; color: #475569; margin-right: 2px; cursor: pointer; user-select: none; }
+        .to-all-wrapper input { margin-right: 4px; accent-color: #0ea5e9; width: 16px; height: 16px; cursor: pointer; }
+
+        #receiver-input { width: 90px; padding: 12px; border: none; border-radius: 25px; background: #e0f2fe; text-align: center; outline: none; font-size: 15px; font-family: 'Pretendard', sans-serif; font-weight: 600; color: #0369a1; transition: all 0.2s; } 
+        #receiver-input::placeholder { color: #7dd3fc; font-weight: 500; }
+        #receiver-input:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
+
+        #msg-input { flex: 1; padding: 12px 16px; border: none; border-radius: 25px; background: #f1f5f9; outline: none; font-size: 16px; font-family: 'Pretendard', sans-serif; color: #334155; }
         #msg-input::placeholder { color: #94a3b8; }
-        #send-btn { background: #0ea5e9; color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); }
+        #send-btn { background: #0ea5e9; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3); flex-shrink: 0; }
         #send-btn:hover { background: #0284c7; transform: scale(1.05); }
         #send-btn:active { transform: scale(0.95); }
         #send-btn:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
@@ -130,12 +211,21 @@
             #audio-btn { bottom: auto; top: 20px; right: 20px; width: 40px; height: 40px; font-size: 1.2rem; border-width: 2px; }
             #ui { top: 95px; left: 50%; transform: translateX(-50%); width: 92%; text-align: center; }
             #ui h1 { display: none; } 
+            
+            /* 모바일에서 우편함 위치 및 크기 조정 */
+            #mailbox-icon { right: 20px; bottom: 210px; }
+
             .desc { font-size: 0.75rem; padding: 8px 12px; line-height: 1.5; background: rgba(255,255,255,0.6); border-radius: 12px; display: inline-block; text-align: left; border: none; box-shadow: none; width: 100%; box-sizing: border-box; }
             .desc span { display: block; margin-bottom: 2px; }
-            #input-bar { bottom: 20px; width: 92%; padding: 8px; border-radius: 30px; }
-            #name-input { width: 60px; font-size: 15px; padding: 10px; }
-            #msg-input { font-size: 15px; padding: 10px 15px; }
-            #send-btn { width: 38px; height: 38px; font-size: 1rem; }
+            #input-bar { bottom: 20px; width: 95%; padding: 8px; border-radius: 30px; gap: 6px; }
+            .to-all-wrapper { font-size: 13px; margin-right: 0; }
+            #receiver-input { width: 60px; font-size: 13px; padding: 10px 5px; }
+            #msg-input { font-size: 14px; padding: 10px 12px; }
+            #send-btn { width: 36px; height: 36px; font-size: 1rem; }
+
+            /* [모바일] 모달 크기 복원 (세로형) */
+            .modal-window { width: 380px; height: 550px; }
+            #list-modal { width: 380px; height: 550px; }
         }
     </style>
 </head>
@@ -146,16 +236,21 @@
         <div class="desc">
             <span class="green-txt">● 방금 도착한 메시지 알림</span>
             <span class="blue-txt">● 파란 옷을 입은 동료들 확인</span>
-            <span class="yellow-txt">● 동료를 클릭해서 휴가 선물</span>
+            <span class="yellow-txt">● 빨간 우편함 클릭: 내 우편함</span> 
             <span class="gray-txt">● 로고 클릭: 작업 리셋</span>
         </div>
+    </div>
+
+    <!-- 우편함 아이콘 (독립 배치) -->
+    <div id="mailbox-icon" title="내 우편함 확인하기" onclick="openMyMsgModal()">
+        <div id="mailbox-text">내 우편함</div>
     </div>
 
     <div id="guide-text">
         <h2>2026 새해 맞이 닷밀 롤링페이퍼 📜</h2>
         <p>
-            올 한 해 고생한 모두에게 따뜻한 말 한마디씩 방명록을 남겨주세요.<br>
-            남겨주신 이야기는 자동으로 아카이빙됩니다.
+            올 한 해 고생한 동료에게 칭찬과 응원의 메시지를 보내주세요!<br>
+            보내는 사람은 익명으로 처리되며, 동료의 이름으로 전달됩니다.
         </p>
     </div>
 
@@ -165,7 +260,7 @@
     <div id="custom-alert">
         <span id="alert-check">✅</span>
         <h3>전송 완료!</h3>
-        <p>당신의 메시지가 무사히 전달되었습니다! 📨</p>
+        <p>익명으로 메시지가 무사히 전달되었습니다! 📨</p>
     </div>
 
     <div id="pc-toast">
@@ -173,14 +268,56 @@
     </div>
 
     <div id="modal-overlay"></div>
-    <div id="list-modal">
-        <div id="modal-header">전체 메시지함 <span id="close-modal">×</span></div>
-        <div id="msg-list"><div class="empty-msg">로딩 중... ⏳</div></div>
+
+    <!-- 전체 메시지함 -->
+    <div id="list-modal" class="modal-window">
+        <div class="modal-header">전체 메시지함 <span class="close-modal-btn" data-target="list-modal">×</span></div>
+        <div id="msg-list" class="msg-list-container"><div class="empty-msg">로딩 중... ⏳</div></div>
+    </div>
+
+    <!-- 내 메시지 확인함 (확장형) -->
+    <div id="my-msg-modal" class="modal-window">
+        <div class="modal-header">
+            <span>📬 나에게 온 메시지</span>
+            <!-- 보기 모드 토글 -->
+            <div class="view-toggle">
+                <label id="toggle-list" onclick="setViewMode('list')">📄 목록</label>
+                <label id="toggle-scene" onclick="setViewMode('scene')" class="active">✨ 장면</label>
+            </div>
+            <span class="close-modal-btn" data-target="my-msg-modal">×</span>
+        </div>
+        
+        <div id="my-msg-auth">
+            <input type="text" id="my-name-input" placeholder="본인 이름을 입력하세요" onkeypress="if(event.key==='Enter') checkMyMessages()">
+            <button id="my-msg-btn" onclick="checkMyMessages()">확인</button>
+        </div>
+        
+        <div id="mailbox-content-area">
+            <!-- 안내 문구 -->
+            <div id="mailbox-placeholder">이름을 입력하고 확인을 눌러주세요.<br>(정확히 일치해야 합니다)</div>
+            
+            <!-- 목록 보기 컨테이너 -->
+            <div id="my-msg-list-container"></div>
+            
+            <!-- 장면 보기 컨테이너 -->
+            <div id="mailbox-canvas-container">
+                <canvas id="mailbox-bg-canvas"></canvas>
+            </div>
+        </div>
     </div>
 
     <div id="input-bar">
-        <input type="text" id="name-input" placeholder="이름" maxlength="5">
-        <input type="text" id="msg-input" placeholder="메시지를 입력하세요" autocomplete="off" maxlength="40">
+        <!-- 모두에게 체크박스 -->
+        <label class="to-all-wrapper" title="체크하면 모두에게 메시지를 보냅니다">
+            <input type="checkbox" id="to-all-check">
+            <span>모두</span>
+        </label>
+        
+        <!-- 받는 사람 입력 -->
+        <input type="text" id="receiver-input" placeholder="받는분" maxlength="5">
+        
+        <!-- 메시지 입력 -->
+        <input type="text" id="msg-input" placeholder="메시지 (익명)" autocomplete="off" maxlength="40">
         <button id="send-btn">➤</button>
     </div>
 
@@ -195,7 +332,6 @@
     let isBgmOn = false; 
     
     soundNames.forEach(name => {
-        // 모든 파일 확장자는 .mp3로 통일 (GitHub 파일명 확인 필수!)
         const audio = new Audio(`sounds/${name}.mp3`);
         if(name === 'bgm') { audio.loop = true; audio.volume = 0.4; } 
         else { audio.volume = name === 'reset' ? 1.0 : 0.8; if(name === 'pop') audio.volume = 0.5; }
@@ -216,32 +352,108 @@
         if (isBgmOn && audioFiles[name]) { audioFiles[name].currentTime = 0; audioFiles[name].play().catch(e => {}); }
     }
 
-    const nameInput = document.getElementById('name-input');
+    const receiverInput = document.getElementById('receiver-input'); 
     const msgInput = document.getElementById('msg-input');
     const sendBtn = document.getElementById('send-btn');
     const viewAllBtn = document.getElementById('view-all-btn');
-    const modal = document.getElementById('list-modal');
+    const toAllCheck = document.getElementById('to-all-check'); 
+    
+    const listModal = document.getElementById('list-modal');
+    const myMsgModal = document.getElementById('my-msg-modal');
     const overlay = document.getElementById('modal-overlay');
-    const closeModal = document.getElementById('close-modal');
+    const closeBtns = document.querySelectorAll('.close-modal-btn');
+    
     const msgList = document.getElementById('msg-list');
+    const myNameInput = document.getElementById('my-name-input');
     const customAlert = document.getElementById('custom-alert');
+
+    // [신규] 뷰 모드 관리
+    let currentViewMode = 'scene'; // 'list' or 'scene'
+    const mbListContainer = document.getElementById('my-msg-list-container');
+    const mbCanvasContainer = document.getElementById('mailbox-canvas-container');
+    const mbToggleList = document.getElementById('toggle-list');
+    const mbToggleScene = document.getElementById('toggle-scene');
+
+    function setViewMode(mode) {
+        currentViewMode = mode;
+        if (mode === 'list') {
+            mbListContainer.style.display = 'block';
+            mbCanvasContainer.style.display = 'none';
+            mbToggleList.classList.add('active');
+            mbToggleScene.classList.remove('active');
+            // 목록 모드로 가면 캔버스 애니메이션 정지
+            if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
+        } else {
+            mbListContainer.style.display = 'none';
+            mbCanvasContainer.style.display = 'block';
+            mbToggleList.classList.remove('active');
+            mbToggleScene.classList.add('active');
+            // 캔버스 크기 재조정 및 애니메이션 재개
+            resizeMailboxCanvas();
+            animateMailbox(); 
+        }
+    }
+
+    // 캔버스 크기 조정 함수
+    function resizeMailboxCanvas() {
+        const rect = document.getElementById('mailbox-content-area').getBoundingClientRect();
+        mbCanvas.width = rect.width;
+        mbCanvas.height = rect.height;
+    }
+
+    // [신규] 우편함 내부 캔버스 관련 변수
+    const mbCanvas = document.getElementById('mailbox-bg-canvas');
+    const mbCtx = mbCanvas.getContext('2d');
+    const mbPlaceholder = document.getElementById('mailbox-placeholder');
+    let mbDancers = [];
+    let mbSnowflakes = [];
+    let mbAnimationId = null;
+
+    // 모두에게 체크 시 입력창 제어
+    toAllCheck.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            receiverInput.disabled = true;
+            receiverInput.value = '';
+            receiverInput.placeholder = '전체';
+        } else {
+            receiverInput.disabled = false;
+            receiverInput.placeholder = '받는분';
+        }
+    });
 
     function showCustomAlert() {
         customAlert.style.display = 'block'; setTimeout(() => { customAlert.style.display = 'none'; }, 2500);
     }
 
     async function sendMessage() {
-        const name = nameInput.value.trim() || '익명'; const text = msgInput.value.trim();
+        let receiver = '';
+        const rawName = receiverInput.value.trim();
+
+        if (toAllCheck.checked) {
+            receiver = 'ALL';
+        } else {
+            const namePattern = /^[가-힣]{3}$/;
+            if (!namePattern.test(rawName)) {
+                return alert("받는 분의 정확한 이름을 입력해주세요.\n(한글 3글자)");
+            }
+            receiver = rawName;
+        }
+
+        const text = msgInput.value.trim();
         if (!text) return alert("내용을 입력해주세요!");
+        
         sendBtn.disabled = true; const originalPlaceholder = msgInput.placeholder;
         msgInput.value = ''; msgInput.placeholder = '전송 중... 🚀';
+        
         try {
-            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name, text: text }) });
-            if (window.distributeSingleMessage) window.distributeSingleMessage({ name: name, text: text });
+            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: receiver, text: text }) });
+            if (window.distributeSingleMessage) window.distributeSingleMessage({ name: receiver, text: text });
             playSound('sent'); showCustomAlert();
+            if (!toAllCheck.checked) receiverInput.value = ''; 
         } catch (error) { alert("전송에 실패했습니다."); } finally { sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); }
     }
 
+    // 전체 메시지 불러오기 (리스트형)
     async function fetchAllMessages() {
         msgList.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
         try {
@@ -250,17 +462,369 @@
             data.forEach(row => {
                 const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div'); div.className = 'list-item';
-                div.innerHTML = `<div class="list-date">${dateStr}</div><div><span class="list-name">${row[1]}</span> <span class="list-text">${row[2]}</span></div>`;
+                let displayReceiver = row[1];
+                let receiverClass = 'list-receiver';
+                if (displayReceiver === 'ALL') {
+                    displayReceiver = '모두에게 📢';
+                    receiverClass = 'list-receiver green-txt'; 
+                } else {
+                    displayReceiver = `To. ${displayReceiver}`;
+                }
+                div.innerHTML = `<div class="list-date">${dateStr}</div><div><span class="${receiverClass}">${displayReceiver}</span> <span class="list-text">${row[2]}</span></div>`;
                 msgList.appendChild(div);
             });
         } catch (error) { msgList.innerHTML = '<div class="empty-msg">불러오기 실패!</div>'; }
     }
 
+    // --- [신규] 연말 감성: 눈송이 클래스 ---
+    class Snowflake {
+        constructor(w, h) {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.size = Math.random() * 2 + 0.5;
+            this.speed = Math.random() * 1 + 0.5;
+            this.opacity = Math.random() * 0.5 + 0.3;
+        }
+        update(w, h) {
+            this.y += this.speed;
+            this.x += Math.sin(this.y * 0.05) * 0.5;
+            if (this.y > h) {
+                this.y = -10;
+                this.x = Math.random() * w;
+            }
+        }
+        draw(ctx) {
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+            ctx.fill();
+        }
+    }
+
+    // --- [신규] 우편함 내부 댄서 클래스 (빛의 정령 & 파티 컨셉) ---
+    class PartyFairy {
+        constructor(msg, isPrivate, w, h) {
+            this.msg = msg; 
+            this.isPrivate = isPrivate; // true면 핑크/빛남 (나에게 온 것)
+            this.x = Math.random() * (w - 60) + 30;
+            this.y = Math.random() * (h - 100) + 80; 
+            // 닷밀 컬러 느낌: 핑크 or 밝은 민트/블루
+            this.color = isPrivate ? '#ec4899' : '#06b6d4'; 
+            this.bodyOffset = Math.random() * 100;
+            this.dir = Math.random() < 0.5 ? -1 : 1;
+            this.speed = 0.5 + Math.random();
+            this.blinkTimer = Math.random() * 200;
+            this.isBlinking = false;
+            
+            // 랜덤 모자 (0:없음, 1:산타, 2:고깔, 3:루돌프뿔)
+            this.hatType = Math.floor(Math.random() * 4);
+        }
+
+        update(w, h) {
+            // 둠칫둠칫
+            this.bodyOffset += 0.15;
+            this.x += this.dir * this.speed * 0.3;
+            if (this.x < 30 || this.x > w - 30) this.dir *= -1;
+
+            // 눈 깜빡임
+            this.blinkTimer--;
+            if (this.blinkTimer <= 0) {
+                this.isBlinking = true;
+                if (this.blinkTimer <= -10) {
+                    this.isBlinking = false;
+                    this.blinkTimer = 100 + Math.random() * 200;
+                }
+            }
+        }
+
+        draw(ctx) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            // 춤추는 바운스
+            const bounce = Math.sin(this.bodyOffset) * 6;
+            ctx.translate(0, bounce);
+
+            // 빛나는 효과 (Glow)
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = this.isPrivate ? 25 : 15; // 내 메시지가 더 빛남
+
+            // 몸통 (둥근 젤리 모양)
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(0, 0, 14, Math.PI, 0); // 위쪽 반원
+            ctx.lineTo(14, 15); // 아래로
+            ctx.bezierCurveTo(7, 20, -7, 20, -14, 15); // 아래쪽 둥글게
+            ctx.fill();
+
+            // 눈 (Glow 끄고 그림)
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#fff';
+            if (this.isBlinking) {
+                ctx.fillRect(-6, -2, 4, 1);
+                ctx.fillRect(2, -2, 4, 1);
+            } else {
+                ctx.beginPath(); ctx.arc(-4, -2, 2.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(4, -2, 2.5, 0, Math.PI*2); ctx.fill();
+            }
+
+            // 볼터치
+            ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
+            ctx.beginPath(); ctx.arc(-7, 2, 2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(7, 2, 2, 0, Math.PI*2); ctx.fill();
+
+            // 모자 그리기
+            this.drawHat(ctx);
+
+            // 말풍선
+            this.drawBubble(ctx);
+
+            ctx.restore();
+        }
+
+        drawHat(ctx) {
+            ctx.shadowBlur = 0;
+            if (this.hatType === 1) { // 산타 모자
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath(); ctx.moveTo(-14, -10); ctx.lineTo(0, -30); ctx.lineTo(14, -10); ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(-16, -10, 32, 6); // 털
+                ctx.beginPath(); ctx.arc(0, -30, 4, 0, Math.PI*2); ctx.fill(); // 방울
+            } else if (this.hatType === 2) { // 고깔 모자
+                ctx.fillStyle = '#facc15';
+                ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(0, -28); ctx.lineTo(10, -10); ctx.fill();
+            } else if (this.hatType === 3) { // 루돌프 뿔
+                ctx.strokeStyle = '#b45309';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); 
+                ctx.moveTo(-5, -10); ctx.lineTo(-12, -22); ctx.lineTo(-8, -24); 
+                ctx.moveTo(-12, -22); ctx.lineTo(-16, -20);
+                ctx.moveTo(5, -10); ctx.lineTo(12, -22); ctx.lineTo(8, -24);
+                ctx.moveTo(12, -22); ctx.lineTo(16, -20);
+                ctx.stroke();
+            }
+        }
+
+        drawBubble(ctx) {
+            const text = this.msg.text.length > 8 ? this.msg.text.substring(0, 8) + '..' : this.msg.text;
+            ctx.font = 'bold 12px "Pretendard", sans-serif';
+            const tm = ctx.measureText(text);
+            const w = tm.width + 20;
+            const h = 30;
+
+            ctx.save();
+            ctx.translate(0, -45); // 머리 위쪽
+            
+            // Glassmorphism 말풍선 (반투명 + 테두리)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; // 반투명 내부
+            ctx.strokeStyle = this.isPrivate ? 'rgba(255, 105, 180, 0.8)' : 'rgba(100, 200, 255, 0.5)'; // 핑크 or 블루 네온 테두리
+            ctx.lineWidth = 1.5;
+            
+            ctx.beginPath();
+            ctx.roundRect(-w/2, -h, w, h, 10);
+            ctx.fill();
+            ctx.stroke();
+            
+            // 꼬리
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-4, 6); ctx.lineTo(4, 6); ctx.closePath();
+            ctx.fillStyle = this.isPrivate ? 'rgba(255, 105, 180, 0.8)' : 'rgba(100, 200, 255, 0.5)';
+            ctx.fill();
+
+            // 텍스트
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, 0, -10);
+            
+            // 수신자 표시 (말풍선 위)
+            ctx.font = 'bold 11px "Pretendard", sans-serif';
+            if (!this.isPrivate) {
+                ctx.fillStyle = '#67e8f9'; // 밝은 하늘색 (ALL)
+                ctx.fillText('To. 모두에게', 0, -h - 6);
+            } else {
+                ctx.fillStyle = '#ff69b4'; // 핫핑크 (나에게)
+                ctx.fillText(`To. ${this.msg.name}`, 0, -h - 6);
+            }
+
+            ctx.restore();
+        }
+    }
+
+    // 우편함 애니메이션 루프 (배경 효과 포함)
+    function animateMailbox() {
+        if (myMsgModal.style.display === 'none' || currentViewMode !== 'scene') return; // 모달 닫히거나 목록 뷰면 중지
+        
+        mbCtx.clearRect(0, 0, mbCanvas.width, mbCanvas.height);
+        
+        // 1. 배경 (닷밀 오로라 느낌 그라데이션)
+        const time = Date.now() * 0.0005;
+        const g = mbCtx.createLinearGradient(0, 0, 0, mbCanvas.height);
+        g.addColorStop(0, '#0f172a'); // Deep Navy
+        g.addColorStop(1, '#312e81'); // Indigo
+        mbCtx.fillStyle = g;
+        mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height);
+
+        // 2. 오로라 라이트 효과 (바닥 조명)
+        mbCtx.save();
+        mbCtx.globalCompositeOperation = 'screen';
+        const lightX = mbCanvas.width/2 + Math.sin(time) * 100;
+        const lg = mbCtx.createRadialGradient(lightX, mbCanvas.height, 10, lightX, mbCanvas.height, 200);
+        lg.addColorStop(0, 'rgba(56, 189, 248, 0.3)');
+        lg.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        mbCtx.fillStyle = lg;
+        mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height);
+        mbCtx.restore();
+
+        // 3. 눈 내리는 효과 업데이트 및 그리기
+        mbSnowflakes.forEach(s => {
+            s.update(mbCanvas.width, mbCanvas.height);
+            s.draw(mbCtx);
+        });
+
+        // 4. 정령들 그리기 (정렬해서 앞뒤 구분)
+        mbDancers.sort((a, b) => a.y - b.y);
+        mbDancers.forEach(d => {
+            d.update(mbCanvas.width, mbCanvas.height);
+            d.draw(mbCtx);
+        });
+
+        mbAnimationId = requestAnimationFrame(animateMailbox);
+    }
+
+    // 내 메시지 확인하기 (캔버스 초기화 및 데이터 로드)
+    async function checkMyMessages() {
+        const myName = myNameInput.value.trim();
+        if (!myName) return alert("본인의 이름을 입력해주세요.");
+        
+        // 초기화
+        mbPlaceholder.style.display = 'block';
+        mbPlaceholder.innerHTML = '✨ 우편함 파티장 입장 중... ✨';
+        mbListContainer.innerHTML = '<div class="empty-msg">로딩 중...</div>';
+        mbDancers = []; 
+        mbSnowflakes = [];
+        
+        resizeMailboxCanvas();
+
+        // 눈송이 50개 생성 (장면 보기용)
+        for(let i=0; i<50; i++) mbSnowflakes.push(new Snowflake(mbCanvas.width, mbCanvas.height));
+
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL); 
+            const data = await response.json(); 
+            
+            if (!data || data.length === 0) { 
+                const emptyText = '아직 도착한 편지가 없어요 😢';
+                mbPlaceholder.innerHTML = emptyText; 
+                mbListContainer.innerHTML = `<div class="empty-msg">${emptyText}</div>`;
+                return; 
+            }
+
+            // 필터링: 내 이름 OR 전체(ALL)
+            const myMessages = data.filter(row => 
+                row[1] === 'ALL' || 
+                row[1].replace(/\s/g, '') === myName.replace(/\s/g, '')
+            );
+            
+            if (myMessages.length === 0) {
+                const emptyText = `'${myName}'님과 모두에게 도착한<br>메시지가 아직 없네요. 텅~`;
+                mbPlaceholder.innerHTML = emptyText;
+                mbListContainer.innerHTML = `<div class="empty-msg">${emptyText}</div>`;
+                return;
+            }
+
+            // 1) 리스트 뷰 채우기
+            mbListContainer.innerHTML = '';
+            myMessages.forEach(row => {
+                const dateRaw = new Date(row[0]); 
+                const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
+                const div = document.createElement('div'); div.className = 'list-item';
+                
+                let prefix = '';
+                if (row[1] === 'ALL') prefix = '<span style="color:#00e676; font-size:0.8rem; margin-right:5px; font-weight:bold;">[전체]</span>';
+                else prefix = '<span style="color:#ec4899; font-size:0.8rem; margin-right:5px; font-weight:bold;">[나에게]</span>';
+
+                div.innerHTML = `<div class="list-date">${dateStr}</div><div>${prefix}<span class="list-text" style="font-weight:bold;">${row[2]}</span></div>`;
+                mbListContainer.appendChild(div);
+            });
+
+            // 2) 장면(캔버스) 뷰 댄서 생성 (최대 10명 제한)
+            mbPlaceholder.style.display = 'none'; // 로딩 문구 숨김
+            
+            const displayMessages = myMessages.slice(0, 10); // [수정] 10개만 슬라이스
+            displayMessages.forEach(row => {
+                const isPrivate = (row[1] !== 'ALL'); 
+                mbDancers.push(new PartyFairy({ name: row[1], text: row[2] }, isPrivate, mbCanvas.width, mbCanvas.height));
+            });
+
+            // 현재 뷰 모드에 따라 애니메이션 시작
+            if (currentViewMode === 'scene') {
+                if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
+                animateMailbox();
+            }
+
+        } catch (error) { 
+            mbPlaceholder.innerHTML = '입장 실패! 다시 시도해주세요.'; 
+            mbListContainer.innerHTML = '<div class="empty-msg">오류가 발생했습니다.</div>';
+        }
+    }
+
     sendBtn.addEventListener('click', sendMessage);
     msgInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendMessage(); });
-    viewAllBtn.addEventListener('click', () => { modal.style.display = 'flex'; overlay.style.display = 'block'; fetchAllMessages(); });
-    function hideModal() { modal.style.display = 'none'; overlay.style.display = 'none'; }
-    closeModal.addEventListener('click', hideModal); overlay.addEventListener('click', hideModal);
+    
+    viewAllBtn.addEventListener('click', () => { listModal.style.display = 'flex'; overlay.style.display = 'block'; fetchAllMessages(); });
+    
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            document.getElementById(targetId).style.display = 'none';
+            overlay.style.display = 'none';
+            if (targetId === 'my-msg-modal') {
+                if (mbAnimationId) cancelAnimationFrame(mbAnimationId); 
+            }
+        });
+    });
+
+    function hideAllModals() {
+        listModal.style.display = 'none';
+        myMsgModal.style.display = 'none';
+        overlay.style.display = 'none';
+        if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
+    }
+    overlay.addEventListener('click', hideAllModals);
+
+    window.openMyMsgModal = () => {
+        myMsgModal.style.display = 'flex'; 
+        overlay.style.display = 'block'; 
+        myNameInput.focus();
+        
+        // 뷰 초기화 (기본: 장면 보기)
+        setViewMode('scene');
+        
+        mbPlaceholder.style.display = 'block';
+        mbPlaceholder.innerHTML = '이름을 입력하고 확인을 눌러주세요.';
+        mbListContainer.innerHTML = ''; 
+        mbCtx.clearRect(0,0, mbCanvas.width, mbCanvas.height);
+        
+        // 대기 화면 눈내리기
+        resizeMailboxCanvas();
+        mbSnowflakes = [];
+        for(let i=0; i<30; i++) mbSnowflakes.push(new Snowflake(mbCanvas.width, mbCanvas.height));
+        
+        if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
+        function waitLoop() {
+            if (myMsgModal.style.display === 'none' || mbDancers.length > 0 || currentViewMode !== 'scene') return;
+            mbCtx.fillStyle = '#0f172a'; mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height);
+            mbSnowflakes.forEach(s => { s.update(mbCanvas.width, mbCanvas.height); s.draw(mbCtx); });
+            mbAnimationId = requestAnimationFrame(waitLoop);
+        }
+        waitLoop();
+    };
+
+    // 윈도우 리사이즈 시 캔버스 크기 대응
+    window.addEventListener('resize', () => {
+        if (myMsgModal.style.display === 'flex') {
+            resizeMailboxCanvas();
+        }
+    }); 
 </script>
 
 <script>
@@ -301,7 +865,11 @@
             this.assignedMessage = null; this.assignmentTime = 0; 
             if(role==='ENGINEER'){this.x=zones.beltStart.x+(zones.beltEnd.x-zones.beltStart.x)*0.5;this.y=zones.beltStart.y+30;}
             else if(role==='OFFICE'){ const c=Math.ceil(CONFIG.officeCount/2),r=Math.floor(idx/c),cl=idx%c,dw=60,dh=60,tw=c*dw,sx=(canvas.width-tw)/2+30,sy=zones.office.y+50; this.seatX=sx+cl*dw;this.seatY=sy+r*dh;this.x=this.seatX;this.y=this.seatY;this.busyState='TYPING';} 
-            else if(role==='FOREMAN'){ this.x = canvas.width/2 - 250; this.y = canvas.height/2 - 20; }
+            else if(role==='FOREMAN'){ 
+                // 작업반장(중앙 주인공 친구) 위치
+                this.x = canvas.width/2 - 250; 
+                this.y = canvas.height/2 - 20; 
+            }
         }
         giveVacation() { 
             this.isPaused=true; playSound('rest'); 
@@ -373,7 +941,15 @@
             ctx.beginPath(); ctx.roundRect(-w/2, -h, w, h, 12); ctx.fill();
             ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-6, -6); ctx.lineTo(6, -6); ctx.fill();
             ctx.shadowBlur = 0; ctx.fillStyle = '#334155'; ctx.textAlign = 'center'; ctx.fillText(msg.text, 0, -26);
-            ctx.font = '500 12px "Pretendard"'; ctx.fillStyle = '#64748b'; ctx.fillText(`From. ${msg.name}`, 0, -10);
+            
+            // [변경] 모두에게 메시지인 경우 표시 다르게
+            let displayName = msg.name;
+            if (displayName === 'ALL') displayName = '모두에게';
+            
+            ctx.font = '500 12px "Pretendard"'; 
+            ctx.fillStyle = (msg.name === 'ALL') ? '#00e676' : '#64748b'; // 모두에게면 초록색
+            ctx.fillText(`To. ${displayName}`, 0, -10);
+            
             ctx.restore();
         }
     }
@@ -469,8 +1045,11 @@
     }
 
     canvas.addEventListener('touchstart', (e) => {
-        if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn')) return;
+        if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn') || e.target.closest('.modal-window')) return;
         const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
+        
+        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
+        
         let touchedFairy = false;
         fairies.forEach(f => {
             if (Math.abs(tx - f.x) < 40 && Math.abs(ty - f.y) < 50) {
@@ -491,8 +1070,11 @@
     }, { passive: false });
 
     window.addEventListener('mousedown', (e) => {
-        if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#list-modal') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
+        if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('.modal-window') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
+        
+        // 작업반장 클릭 로직 제거 (이제 우편함 버튼 사용)
+
         let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); if (clickedFairy) return;
         if (cx > canvas.width/2 - 250 && cx < canvas.width/2 + 250 && cy > canvas.height/2 - 80 && cy < canvas.height/2 + 80) { 
             particles.forEach(p => { if (p.state === 'PLACED') p.reset(); }); 
@@ -504,9 +1086,19 @@
     let prevHoveredFairy = null; 
     window.addEventListener('mousemove', (e) => {
         const rect = canvas.getBoundingClientRect(); mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
+        
+        // 커서 포인터 변경 로직 (작업반장 부분 제거)
+
         let closest = null; let minDist = 30; 
         fairies.forEach(f => { const dx = mouseX - f.x; const dy = mouseY - f.y; const dist = Math.sqrt(dx*dx + dy*dy); if (dist < minDist) { minDist = dist; closest = f; } }); 
         hoveredFairy = closest;
+        
+        if (hoveredFairy) {
+            canvas.style.cursor = 'pointer';
+        } else {
+            canvas.style.cursor = 'default';
+        }
+
         if (closest !== prevHoveredFairy) {
             if (closest && closest.assignedMessage) { playSound('pop'); }
             prevHoveredFairy = closest;
