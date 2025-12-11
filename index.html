@@ -893,6 +893,9 @@
             ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2+2,-h/2-6,8,8); // Face
 
             if (this.customStyle) {
+                ctx.save();
+                ctx.translate(0, 8); // [FIX] Align head parts to Fairy's lower face position
+
                 ctx.fillStyle = '#4a3b2a';
                 const hr = this.customStyle.hair;
                 if (hr === 0) { // 기본
@@ -913,9 +916,7 @@
                     ctx.fillRect(-8, -26, 16, 6); 
                     ctx.fillRect(-9, -22, 4, 12); ctx.fillRect(5, -22, 4, 12); 
                 }
-            }
 
-            if (this.customStyle) {
                 const ac = this.customStyle.acc;
                 if (ac === 1) { // 루돌프
                     ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2; ctx.lineCap = 'round';
@@ -936,6 +937,7 @@
                     ctx.fillStyle = '#fff'; // Center
                     ctx.beginPath(); ctx.arc(6, -28, 2, 0, Math.PI*2); ctx.fill();
                 }
+                ctx.restore();
             }
 
             if (isSantaMode) {
