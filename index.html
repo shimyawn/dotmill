@@ -323,7 +323,7 @@
         '#22c55e', '#0ea5e9', '#6366f1', '#a855f7' // Green, Sky, Indigo, Purple
     ]; 
     const HAIR_ICONS = ['🧑', '🦱', '👱', '👩']; // 4 styles
-    const ACC_ICONS = ['❌', '🎄', '🏮']; // 3 styles
+    const ACC_ICONS = ['❌', '🎄', '🌸']; // 3 styles (Lantern -> Flower)
 
     let currentStyle = { hair: 0, shirt: 0, acc: 0 };
 
@@ -601,15 +601,17 @@
                 ctx.beginPath(); ctx.moveTo(6, -29); ctx.lineTo(4, -33); ctx.stroke();
                 // 빨간 코
                 ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(0, -18, 1.5, 0, Math.PI*2); ctx.fill();
-            } else if (a === 2) { // 한복 배자 (더 선명한 조끼 + 고름)
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // 반투명 속
-                ctx.fillStyle = '#1e40af'; // 짙은 파랑 배자
-                ctx.fillRect(-8, -15, 4, 12); ctx.fillRect(4, -15, 4, 12); // 양쪽 자락
-                ctx.fillRect(-8, -15, 16, 4); // 어깨
-                
-                // 고름 (빨강)
-                ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(-1, -10); ctx.lineTo(3, -8); ctx.lineTo(3, -4); ctx.stroke();
+            } else if (a === 2) { // 머리에 꽃 (NEW)
+                ctx.fillStyle = '#ff69b4'; // Pink petals
+                for(let i=0; i<5; i++) {
+                    const angle = (i * 2 * Math.PI) / 5;
+                    const r = 3;
+                    ctx.beginPath();
+                    ctx.arc(6 + Math.cos(angle)*r, -28 + Math.sin(angle)*r, 2, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#fff'; // Center
+                ctx.beginPath(); ctx.arc(6, -28, 2, 0, Math.PI*2); ctx.fill();
             }
         }
 
@@ -803,7 +805,7 @@
         if(santaTimer) clearTimeout(santaTimer);
         santaTimer = setTimeout(() => {
             isSantaMode = false;
-        }, 30000); // 30초
+        }, 7000); // 30초 -> 7초
     }
 
     class Particle {
@@ -922,13 +924,17 @@
                     ctx.beginPath(); ctx.moveTo(3, -25); ctx.lineTo(8, -32); ctx.stroke();
                     ctx.beginPath(); ctx.moveTo(6, -29); ctx.lineTo(4, -33); ctx.stroke();
                     ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(0, -18, 1.5, 0, Math.PI*2); ctx.fill();
-                } else if (ac === 2) { // 한복
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    ctx.fillStyle = '#1e40af'; 
-                    ctx.fillRect(-8, -15, 4, 12); ctx.fillRect(4, -15, 4, 12);
-                    ctx.fillRect(-8, -15, 16, 4); 
-                    ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 1.5;
-                    ctx.beginPath(); ctx.moveTo(-1, -10); ctx.lineTo(3, -8); ctx.lineTo(3, -4); ctx.stroke();
+                } else if (ac === 2) { // 한복 배자 -> 꽃
+                    ctx.fillStyle = '#ff69b4'; // Pink petals
+                    for(let i=0; i<5; i++) {
+                        const angle = (i * 2 * Math.PI) / 5;
+                        const r = 3;
+                        ctx.beginPath();
+                        ctx.arc(6 + Math.cos(angle)*r, -28 + Math.sin(angle)*r, 2, 0, Math.PI*2);
+                        ctx.fill();
+                    }
+                    ctx.fillStyle = '#fff'; // Center
+                    ctx.beginPath(); ctx.arc(6, -28, 2, 0, Math.PI*2); ctx.fill();
                 }
             }
 
