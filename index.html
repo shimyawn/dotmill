@@ -271,7 +271,8 @@
     <canvas id="canvas"></canvas>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAWBCqf8KGlZvd1yleXLzzfKiNCbBCu-fFQgxwttePcVqfXRSNHy6U2f60Vp4_S_26eA/exec";
+    // [중요] 여기에 새로 배포하신 Google Apps Script의 URL을 넣어주세요.
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqwO64o1ozDYp5Gbw8NP3W0Xu4eFpEyHRoaXDXXrYlnHg8AKXR54hrlUjxtE5ZCfQ6lw/exec";
 
     // --- [사운드] ---
     const audioFiles = {};
@@ -431,14 +432,23 @@
         sendBtn.disabled = true; const originalPlaceholder = msgInput.placeholder;
         msgInput.value = ''; msgInput.placeholder = '전송 중... 🚀';
         
-        // [변경] 스타일 데이터를 별도 필드(style)로 전송 (구글 앱스 스크립트 수정 필요)
-        // 만약 구글 앱스 스크립트가 4번째 열(D열)을 style로 받는다면 아래처럼 전송합니다.
+        // [중요] 스타일 데이터를 JSON 문자열로 변환하여 'style' 필드에 담아 전송
+        // Google Apps Script에서 이 'style' 필드를 받아 4번째 열에 저장해야 합니다.
         const styleData = JSON.stringify(currentStyle);
         const finalPayload = { name: receiver, text: text, style: styleData };
 
         try {
             await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalPayload) });
-            if (window.distributeSingleMessage) window.distributeSingleMessage({ name: receiver, text: text, style: currentStyle });
+            // 전송 성공 시 로컬 화면에도 즉시 반영 (스타일 포함)
+            // [버그 수정] currentStyle을 참조가 아닌 복사본으로 전달해야, 
+            // 이후 스타일 변경 시 기존 메시지의 스타일이 바뀌지 않습니다.
+            if (window.distributeSingleMessage) {
+                window.distributeSingleMessage({ 
+                    name: receiver, 
+                    text: text, 
+                    style: { ...currentStyle } // 객체 복사
+                });
+            }
             playSound('sent'); showCustomAlert();
             if (!toAllCheck.checked) receiverInput.value = ''; 
         } catch (error) { alert("전송에 실패했습니다."); } finally { sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); }
@@ -453,7 +463,7 @@
                 const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
                 const div = document.createElement('div'); div.className = 'list-item';
                 
-                // [변경] row[2]는 메시지 텍스트만 (스타일 분리됨)
+                // row[2]는 메시지 텍스트
                 let displayMsg = row[2] || "";
 
                 let displayReceiver = row[1];
@@ -493,9 +503,10 @@
             this.x = Math.random() * (w - 60) + 30;
             this.y = Math.random() * (h - 100) + 80; 
             
+            // [중요] 메시지에 스타일이 있으면 적용, 없으면 기본값
             this.style = msg.style || { hair: 0, shirt: 0, acc: 0 };
             
-            // [변경] 셔츠 색상 매핑 (3가지 커스텀 색상)
+            // 셔츠 색상 매핑
             this.shirtColor = CUSTOM_SHIRT_COLORS[this.style.shirt] || CUSTOM_SHIRT_COLORS[0];
 
             this.bodyOffset = Math.random() * 100;
@@ -794,8 +805,8 @@
             this.busyTargetX=0; this.busyTargetY=0; this.seatX=0; this.seatY=0;
             this.assignedMessage = null; this.assignmentTime = 0; 
             
-            // [신규] 메시지 전달 시 부여될 커스텀 스타일
-            this.customStyle = null; // { hair, shirt, acc }
+            // [중요] 메시지가 부여될 때 이 변수에 {hair, shirt, acc} 객체가 들어옴
+            this.customStyle = null; 
 
             if(role==='ENGINEER'){this.x=zones.beltStart.x+(zones.beltEnd.x-zones.beltStart.x)*0.5;this.y=zones.beltStart.y+30;}
             else if(role==='OFFICE'){ const c=Math.ceil(CONFIG.officeCount/2),r=Math.floor(idx/c),cl=idx%c,dw=60,dh=60,tw=c*dw,sx=(canvas.width-tw)/2+30,sy=zones.office.y+50; this.seatX=sx+cl*dw;this.seatY=sy+r*dh;this.x=this.seatX;this.y=this.seatY;this.busyState='TYPING';} 
@@ -844,10 +855,9 @@
         draw() {
             ctx.save(); ctx.translate(this.x, this.y);
             
-            // 옷 색상 결정 (커스텀 or 기본)
+            // [중요] customStyle이 있으면(메시지 배달 중이면) 옷 색상 덮어쓰기
             let shirtColor = this.colorShirt;
             if (this.customStyle) {
-                // [변경] 3가지 색상 매핑
                 shirtColor = CUSTOM_SHIRT_COLORS[this.customStyle.shirt] || CUSTOM_SHIRT_COLORS[0];
             }
 
@@ -867,7 +877,7 @@
             ctx.fillStyle=shirtColor;ctx.fillRect(-w/2,-h/2,w,h/2); // Shirt
             ctx.fillStyle='#fce4d4';ctx.fillRect(-w/2+2,-h/2-6,8,8); // Face
 
-            // [신규] 헤어스타일 (커스텀이 있으면 그림)
+            // [중요] customStyle이 있으면 헤어스타일 변경
             if (this.customStyle) {
                 ctx.fillStyle = '#4a3b2a';
                 const hr = this.customStyle.hair;
@@ -884,7 +894,7 @@
                 }
             }
 
-            // [신규] 커스텀 장식 (메시지 배달부용)
+            // [중요] customStyle이 있으면 장식 추가
             if (this.customStyle) {
                 const ac = this.customStyle.acc;
                 if (ac === 1) { // 크리스마스 뿔 (약식)
@@ -896,8 +906,7 @@
                 }
             }
 
-            // [신규] 산타 모드 모자 (전직원 적용)
-            // 메시지 커스텀 장식과 겹칠 수 있으나 이벤트니까 덮어씌움
+            // [이벤트] 산타 모드 (전직원 적용)
             if (isSantaMode) {
                 ctx.fillStyle = '#ef4444'; // 모자
                 ctx.beginPath(); ctx.moveTo(-6, -16); ctx.lineTo(0, -26); ctx.lineTo(6, -16); ctx.fill();
@@ -976,7 +985,7 @@
         if (target) { 
             target.assignedMessage = newMsg; 
             target.assignmentTime = Date.now();
-            // [신규] 메시지에 포함된 스타일 적용
+            // [중요] 새로 도착한 메시지에 스타일이 있다면, 해당 직원에게 적용
             if(newMsg.style) target.customStyle = newMsg.style;
         }
     };
@@ -1037,7 +1046,7 @@
                         f.assignedMessage = { name: row[1], text: row[2] };
                         f.assignmentTime = Date.now(); 
                         
-                        // [변경] 초기 로드 메시지 스타일 파싱 (4번째 열)
+                        // [중요] 초기 로드 메시지에서 스타일 정보 추출 (4번째 열 = row[3])
                         let styleJson = row[3];
                         if (styleJson) {
                             try { f.customStyle = JSON.parse(styleJson); } catch(e) {}
@@ -1116,4 +1125,3 @@
 </script>
 </body>
 </html>
-
