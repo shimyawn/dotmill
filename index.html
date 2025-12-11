@@ -346,7 +346,7 @@
 
 <script>
     // [중요] 여기에 새로 배포하신 Google Apps Script의 URL을 넣어주세요.
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwqwO64o1ozDYp5Gbw8NP3W0Xu4eFpEyHRoaXDXXrYlnHg8AKXR54hrlUjxtE5ZCfQ6lw/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVUstSVxUqWBzLgxCoNUqRE02DVGa8dbjWFl6opbPqiqokuCjn9dEEf9qn6jrrW09QFA/exec";
 
     // --- [사운드] ---
     const audioFiles = {};
@@ -541,8 +541,27 @@
         const styleData = JSON.stringify(currentStyle);
         const finalPayload = { name: receiver, text: text, style: styleData };
 
+        // [중요] 재시도 로직이 포함된 전송 함수
+        const performFetch = async (retries = 3, delay = 1500) => {
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(finalPayload) 
+                });
+            } catch (err) {
+                if (retries > 1) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return performFetch(retries - 1, delay * 2);
+                } else {
+                    throw err;
+                }
+            }
+        };
+
         try {
-            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalPayload) });
+            await performFetch();
             
             if (window.distributeSingleMessage) {
                 window.distributeSingleMessage({ 
@@ -553,7 +572,11 @@
             }
             playSound('sent'); showCustomAlert();
             if (!toAllCheck.checked) receiverInput.value = ''; 
-        } catch (error) { alert("전송에 실패했습니다."); } finally { sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); }
+        } catch (error) { 
+            alert("전송에 실패했습니다. (서버 혼잡)"); 
+        } finally { 
+            sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); 
+        }
     }
 
     // 전체 메시지 로드 (탭 2)
