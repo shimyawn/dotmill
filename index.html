@@ -473,23 +473,57 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVUstSVxUqWBzLgxCoNUqRE02DVGa8dbjWFl6opbPqiqokuCjn9dEEf9qn6jrrW09QFA/exec";
 
     // --- [사운드] ---
+    // [NEW] Carol 추가
     const audioFiles = {};
-    const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset'];
+    const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset', 'carol'];
     let isBgmOn = false; 
     
     soundNames.forEach(name => {
         const audio = new Audio(`sounds/${name}.mp3`);
         if(name === 'bgm') { audio.loop = true; audio.volume = 0.4; } 
+        else if(name === 'carol') { audio.loop = true; audio.volume = 0.4; }
         else { audio.volume = name === 'reset' ? 1.0 : 0.8; if(name === 'pop') audio.volume = 0.5; }
         audioFiles[name] = audio;
     });
 
+    // [NEW] BGM 전환 및 복구 로직
+    let fadeOutInterval = null;
+
+    function switchBgmToCarol() {
+        if (!isBgmOn) return; 
+
+        const bgm = audioFiles['bgm'];
+        const carol = audioFiles['carol'];
+
+        // Carol 준비
+        carol.volume = 0.4;
+        
+        // 페이드 아웃
+        if (fadeOutInterval) clearInterval(fadeOutInterval);
+        
+        fadeOutInterval = setInterval(() => {
+            if (bgm.volume > 0.05) {
+                bgm.volume -= 0.05;
+            } else {
+                clearInterval(fadeOutInterval);
+                bgm.pause();
+                bgm.volume = 0.4; // 다음을 위해 복구
+                carol.play().catch(e => console.log(e));
+            }
+        }, 200); 
+    }
+
     const audioBtn = document.getElementById('btn-audio');
     audioBtn.addEventListener('click', () => {
         if (isBgmOn) {
-            audioFiles['bgm'].pause(); audioBtn.innerText = '🔇'; isBgmOn = false;
+            // 소리 끄기
+            audioFiles['bgm'].pause(); 
+            audioFiles['carol'].pause();
+            audioBtn.innerText = '🔇'; isBgmOn = false;
         } else {
-            audioFiles['bgm'].play().then(() => { audioBtn.innerText = '🔊'; isBgmOn = true; })
+            // 소리 켜기 (현재 상태에 따라 결정)
+            const targetAudio = isLogoComplete ? audioFiles['carol'] : audioFiles['bgm'];
+            targetAudio.play().then(() => { audioBtn.innerText = '🔊'; isBgmOn = true; })
             .catch(e => { alert("소리 파일을 로딩 중이거나 찾을 수 없습니다."); });
         }
     });
@@ -1047,6 +1081,22 @@
         mainSnowflakes = [];
         santaObj.active = false;
         starlightCache = null; // Reset cache
+        
+        // [NEW] 음악 리셋
+        if (fadeOutInterval) clearInterval(fadeOutInterval);
+        
+        audioFiles['carol'].pause();
+        audioFiles['carol'].currentTime = 0;
+        
+        const bgm = audioFiles['bgm'];
+        bgm.volume = 0.4; 
+        
+        if (isBgmOn) {
+            if (bgm.paused) bgm.play().catch(e => console.log(e));
+        } else {
+            bgm.pause();
+        }
+
         playSound('reset');
     };
 
@@ -1762,6 +1812,9 @@
             santaObj.active = true;
             santaObj.x = -100;
             santaObj.y = 100;
+            
+            // 음악 전환
+            switchBgmToCarol();
         }
         
         const width = window.innerWidth;
