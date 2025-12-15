@@ -1977,9 +1977,11 @@
             const response = await fetch(GOOGLE_SCRIPT_URL);
             const data = await response.json(); 
             if (data && data.length > 0) {
-                const recent10 = [...data].reverse().slice(0, 10);
+                // [FIXED] 기존 10개 제한을 60개로 늘려 더 많은 메시지가 보이도록 수정
+                const recentMessages = [...data].reverse().slice(0, 60); 
                 const shuffledFairies = [...fairies].sort(() => 0.5 - Math.random());
-                recent10.forEach((row, idx) => {
+                
+                recentMessages.forEach((row, idx) => {
                     if (idx < shuffledFairies.length) {
                         const f = shuffledFairies[idx];
                         f.assignedMessage = { name: row[1], text: row[2] };
