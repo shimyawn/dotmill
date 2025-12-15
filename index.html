@@ -265,20 +265,25 @@
         }
         #style-options.show { display: flex; }
         
+        /* [UPDATED] 꾸미기 버튼 및 인디케이터 스타일 수정 */
         .style-opt-btn {
-            width: 40px; height: 40px; border-radius: 12px; border: 1px solid #e2e8f0;
-            background: #f8fafc; cursor: pointer; font-size: 1.2rem;
+            width: 48px; height: 48px; /* 크기 확대 */
+            border-radius: 14px; border: 2px solid #e2e8f0;
+            background: #fff; cursor: pointer; 
             display: flex; align-items: center; justify-content: center;
             position: relative;
+            transition: transform 0.1s;
         }
-        .style-opt-btn:hover { background: #f1f5f9; }
+        .style-opt-btn:active { transform: scale(0.95); }
         
         .style-indicator {
-            position: absolute; bottom: -2px; right: -2px;
-            width: 16px; height: 16px; border-radius: 50%;
-            background: #333; border: 2px solid white;
-            font-size: 10px; color: white; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-family: 'Pretendard', sans-serif;
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; 
+            border-radius: 12px;
+            background-color: #fff; /* 뒤의 라벨 아이콘 가림용 */
+            font-size: 28px; /* 이모지 대폭 확대 */
+            display: flex; align-items: center; justify-content: center;
+            z-index: 5;
         }
 
         /* [NEW] 튜토리얼 관련 스타일 */
