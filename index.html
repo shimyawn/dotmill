@@ -35,30 +35,7 @@
         #sim-controls button:hover { background: #fff; color: #0ea5e9; border-color: #0ea5e9; transform: translateY(-1px); }
         #sim-controls button:active { transform: translateY(0); }
         
-        /* 도움말 버튼 활성 상태 */
-        #btn-help.active { background: #e0f2fe; color: #0ea5e9; border-color: #0ea5e9; }
-
-        /* 도움말 팝업 박스 */
-        #help-popup {
-            display: none; /* 기본 숨김 */
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #cbd5e1; border-radius: 16px;
-            padding: 16px; width: 260px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            pointer-events: auto;
-            animation: popIn 0.2s ease;
-            font-size: 0.8rem; color: #475569; line-height: 1.6;
-        }
-        .help-section { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed #e2e8f0; }
-        .help-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .help-title { font-weight: 800; color: #1e293b; margin-bottom: 6px; display: block; font-size: 0.85rem; }
-        .help-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .dot.green { background: #00e676; }
-        .dot.blue { background: #2979ff; }
-        .dot.yellow { background: #ef4444; } 
-        .dot.gray { background: #64748b; }
+        /* 도움말 버튼 활성 상태 (삭제됨) */
         
         .warning-txt { color: #ea580c; font-weight: 600; background: #fff7ed; padding: 8px; border-radius: 8px; margin-top: 5px; font-size: 0.75rem; }
 
@@ -300,6 +277,36 @@
             font-weight: bold; font-family: 'Pretendard', sans-serif;
         }
 
+        /* [NEW] 튜토리얼 관련 스타일 */
+        #tutorial-backdrop {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 8000;
+        }
+        .tutorial-modal {
+            display: none; position: fixed; /* [FIX] absolute -> fixed */
+            background: white; padding: 25px; border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4); width: 280px; text-align: center;
+            z-index: 10001; /* [FIX] 최상위 레이어 */
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
+        }
+        .tutorial-modal h3 { margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem; }
+        .tutorial-modal p { color: #64748b; line-height: 1.5; margin-bottom: 20px; word-break: keep-all; font-size: 0.9rem; }
+        .tutorial-btn {
+            background: #0ea5e9; color: white; border: none; padding: 10px 24px;
+            border-radius: 12px; font-weight: 700; cursor: pointer; font-family: 'Pretendard';
+            transition: transform 0.1s;
+        }
+        .tutorial-btn:hover { background: #0284c7; transform: scale(1.05); }
+        /* 하이라이트 효과 클래스 */
+        .highlight-target {
+            position: relative; z-index: 10000 !important; /* [FIX] 튜토리얼 배경보다 위 */
+            background-color: rgba(255,255,255,0.95); /* 배경이 투명할 경우를 대비 */
+            border-radius: 16px; /* 둥근 모서리 보정 */
+            box-shadow: 0 0 0 4px #0ea5e9, 0 0 20px rgba(14, 165, 233, 0.5); /* 강조 테두리 */
+            transition: all 0.3s;
+        }
+
         @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
         @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -40%); } 10% { opacity: 1; transform: translate(-50%, -50%); } 90% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -60%); } }
@@ -333,29 +340,9 @@
             <button onclick="toggleSpeed()" id="btn-speed" title="속도 조절">1x</button>
             <button onclick="resetSimulation()" id="btn-reset" title="작업 초기화">🔄</button>
             <button id="btn-audio" title="배경음악 On/Off">🔇</button>
-            <button onclick="toggleHelp()" id="btn-help" title="도움말 및 사용법">?</button>
+            <button onclick="restartTutorial()" id="btn-help" title="튜토리얼 다시보기">?</button>
         </div>
-
-        <!-- 도움말 팝업 -->
-        <div id="help-popup">
-            <div class="help-section">
-                <span class="help-title">💡 색상별 의미</span>
-                <div class="help-row"><div class="dot green"></div> 방금 도착한 메시지 알림</div>
-                <div class="help-row"><div class="dot blue"></div> 파란 옷을 입은 동료들</div>
-                <div class="help-row"><div class="dot yellow"></div> 빨간 우편함: 내 메시지함</div>
-                <div class="help-row"><div class="dot gray"></div> 🔄 버튼: 작업 리셋</div>
-            </div>
-            <div class="help-section">
-                <span class="help-title">📨 메시지 보내는 법</span>
-                <p>
-                    하단 바에서 받는 사람 이름을(3글자) 입력하거나 '모두'를 체크하고,
-                    👕 버튼으로 캐릭터를 꾸민 뒤 메시지를 적어 전송하세요!
-                </p>
-                <div class="warning-txt">
-                    ⚠️ 한 번에 너무 많은 메시지를 보내면 오류가 날 수 있어용! 조금만 천천히 보내주세용 🥺
-                </div>
-            </div>
-        </div>
+        <!-- 도움말 팝업 삭제 -->
     </div>
 
     <div id="mailbox-icon" title="내 우편함 확인하기" onclick="openMyMsgModal()">
@@ -397,6 +384,14 @@
     </div>
 
     <div id="modal-overlay"></div>
+
+    <!-- [NEW] 튜토리얼 요소 -->
+    <div id="tutorial-backdrop"></div>
+    <div id="tutorial-modal" class="tutorial-modal">
+        <h3 id="tuto-title">환영합니다! 👋</h3>
+        <p id="tuto-desc">2026 닷밀 신년맞이 방명록에 오신 것을 환영합니다.</p>
+        <button class="tutorial-btn" onclick="nextTutorial()">다음</button>
+    </div>
 
     <!-- 통합 메시지 모달 -->
     <div id="my-msg-modal" class="modal-window">
@@ -546,6 +541,78 @@
     
     function playSound(name) {
         if (isBgmOn && audioFiles[name]) { audioFiles[name].currentTime = 0; audioFiles[name].play().catch(e => {}); }
+    }
+
+    // [NEW] 튜토리얼 로직
+    let tutoStep = 0;
+    const tutorialSteps = [
+        { title: "환영합니다! 👋", desc: "이곳은 닷밀의 동료들과 함께하는<br>신년맞이 방명록 공간입니다.", target: null },
+        { title: "메시지 보내기 📨", desc: "이곳에서 동료의 이름을 입력하고<br>따뜻한 익명 메시지를 보내보세요!<br>캐릭터도 꾸밀 수 있답니다.", target: "input-bar" },
+        { title: "우편함 확인 📮", desc: "나에게 도착한 편지는<br>이 우편함을 눌러서 확인할 수 있어요.", target: "mailbox-icon" },
+        { title: "즐거운 시간 되세요! 🎉", desc: "동료들을 클릭해서 휴가를 선물하세요!<br>그리고 열심히 일하는 동료들이<br>DOT을 모두 옮겨 로고를 완성하면...<br>놀라운 일이 벌어질지도 몰라요! 🎁<br>자, 이제 시작해볼까요?", target: null }
+    ];
+
+    function runTutorial(force = false) {
+        // 이미 본 사람은 패스 (localStorage 사용), 단 force가 true면 무시하고 실행
+        if (!force && localStorage.getItem('dotmill_tutorial_seen_v1')) return;
+        
+        tutoStep = 0; // 초기화
+        document.getElementById('tutorial-backdrop').style.display = 'block';
+        const modal = document.getElementById('tutorial-modal');
+        modal.style.display = 'block';
+        updateTutorialUI();
+    }
+
+    function restartTutorial() {
+        runTutorial(true); // 강제 실행
+    }
+
+    function nextTutorial() {
+        // 이전 타겟 하이라이트 해제
+        if (tutoStep < tutorialSteps.length && tutorialSteps[tutoStep].target) {
+            const prevTarget = document.getElementById(tutorialSteps[tutoStep].target);
+            if(prevTarget) prevTarget.classList.remove('highlight-target');
+        }
+        
+        tutoStep++;
+        if (tutoStep >= tutorialSteps.length) {
+            // 종료
+            document.getElementById('tutorial-backdrop').style.display = 'none';
+            document.getElementById('tutorial-modal').style.display = 'none';
+            localStorage.setItem('dotmill_tutorial_seen_v1', 'true');
+            playSound('pop'); 
+        } else {
+            updateTutorialUI();
+        }
+    }
+
+    function updateTutorialUI() {
+        const step = tutorialSteps[tutoStep];
+        document.getElementById('tuto-title').innerHTML = step.title;
+        document.getElementById('tuto-desc').innerHTML = step.desc;
+        
+        const modal = document.getElementById('tutorial-modal');
+        
+        if (step.target) {
+            const targetEl = document.getElementById(step.target);
+            if (targetEl) {
+                targetEl.classList.add('highlight-target');
+                
+                // 모달 위치 조정 (타겟 근처)
+                const rect = targetEl.getBoundingClientRect();
+                let top = rect.top - 160; // 타겟 위쪽
+                if (top < 50) top = rect.bottom + 20; // 공간 없으면 아래쪽
+                
+                modal.style.top = top + 'px';
+                modal.style.left = '50%';
+                modal.style.transform = 'translate(-50%, 0)';
+            }
+        } else {
+            // 타겟 없으면 중앙 정렬
+            modal.style.top = '50%';
+            modal.style.left = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+        }
     }
 
     const receiverInput = document.getElementById('receiver-input'); 
@@ -1739,6 +1806,9 @@
         for(let i=0; i<CONFIG.builderCount; i++) fairies.push(new Fairy('BUILDER'));
         for(let i=0; i<CONFIG.engineerCount; i++) fairies.push(new Fairy('ENGINEER'));
         for(let i=0; i<CONFIG.officeCount; i++) fairies.push(new Fairy('OFFICE', i));
+        
+        // [NEW] 튜토리얼 실행 체크
+        setTimeout(runTutorial, 500); // 0.5초 후 시작
     }
 
     function isVisible(f) { return f.x > 20 && f.x < canvas.width/(window.devicePixelRatio||1) - 20 && f.y > 0 && f.y < canvas.height/(window.devicePixelRatio||1); }
