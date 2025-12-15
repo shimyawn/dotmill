@@ -956,9 +956,11 @@
     // Config
     const CONFIG = { 
         text: 'dotmill', font: '900 120px "Pretendard", Arial', pixelSize: 5, 
-        builderCount: 15, engineerCount: 3, officeCount: 50, 
+        builderCount: 19, 
+        engineerCount: 3, officeCount: 50, 
         colors: ['#0ea5e9', '#334155', '#475569', '#1e293b'], 
-        dropInterval: 300, beltSpeed: 2 
+        dropInterval: 180, // [MODIFIED] 60 -> 180 (속도 조절)
+        beltSpeed: 2 
     };
 
     let particles=[], fairies=[], beltOffset=0, lastDropTime=0, mouseX=0, mouseY=0, hoveredFairy=null;
