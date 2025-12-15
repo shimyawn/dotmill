@@ -1978,7 +1978,7 @@
             const data = await response.json(); 
             if (data && data.length > 0) {
                 // [FIXED] 기존 10개 제한을 60개로 늘려 더 많은 메시지가 보이도록 수정
-                const recentMessages = [...data].reverse().slice(0, 60); 
+                const recentMessages = [...data].reverse().slice(0, 73); 
                 const shuffledFairies = [...fairies].sort(() => 0.5 - Math.random());
                 
                 recentMessages.forEach((row, idx) => {
@@ -2048,3 +2048,4 @@
 </script>
 </body>
 </html>
+
