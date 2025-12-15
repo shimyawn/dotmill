@@ -473,9 +473,9 @@
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwVUstSVxUqWBzLgxCoNUqRE02DVGa8dbjWFl6opbPqiqokuCjn9dEEf9qn6jrrW09QFA/exec";
 
     // --- [사운드] ---
-    // [NEW] Carol 추가
+    // [NEW] Carol, Correct 추가
     const audioFiles = {};
-    const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset', 'carol'];
+    const soundNames = ['bgm', 'sent', 'rest', 'pop', 'reset', 'carol', 'correct'];
     let isBgmOn = false; 
     
     soundNames.forEach(name => {
@@ -494,11 +494,27 @@
 
         const bgm = audioFiles['bgm'];
         const carol = audioFiles['carol'];
+        const correct = audioFiles['correct'];
 
         // Carol 준비
         carol.volume = 0.4;
         
-        // 페이드 아웃
+        // 1. Correct 효과음 재생
+        if (correct) {
+            correct.volume = 0.8;
+            correct.currentTime = 0;
+            correct.play().catch(e => console.log(e));
+            
+            // 3. Correct 재생이 끝난 후 Carol 재생
+            correct.onended = () => {
+                carol.play().catch(e => console.log(e));
+            };
+        } else {
+            // 효과음 없으면 바로 캐롤
+            carol.play().catch(e => console.log(e));
+        }
+
+        // 2. 동시에 기존 BGM 페이드 아웃
         if (fadeOutInterval) clearInterval(fadeOutInterval);
         
         fadeOutInterval = setInterval(() => {
@@ -508,7 +524,6 @@
                 clearInterval(fadeOutInterval);
                 bgm.pause();
                 bgm.volume = 0.4; // 다음을 위해 복구
-                carol.play().catch(e => console.log(e));
             }
         }, 200); 
     }
@@ -519,6 +534,7 @@
             // 소리 끄기
             audioFiles['bgm'].pause(); 
             audioFiles['carol'].pause();
+            if(audioFiles['correct']) audioFiles['correct'].pause();
             audioBtn.innerText = '🔇'; isBgmOn = false;
         } else {
             // 소리 켜기 (현재 상태에 따라 결정)
@@ -1087,6 +1103,12 @@
         
         audioFiles['carol'].pause();
         audioFiles['carol'].currentTime = 0;
+        
+        // Correct 사운드도 정지
+        if(audioFiles['correct']) {
+            audioFiles['correct'].pause();
+            audioFiles['correct'].currentTime = 0;
+        }
         
         const bgm = audioFiles['bgm'];
         bgm.volume = 0.4; 
