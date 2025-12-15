@@ -7,6 +7,8 @@
     
     <!-- Pretendard Web Font -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- [NEW] 귀여운 글씨체 (Gaegu) -->
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         /* 기본 스타일 */
@@ -14,6 +16,7 @@
             margin: 0; overflow: hidden; background-color: #ffffff; 
             font-family: 'Pretendard', sans-serif; 
             user-select: none; -webkit-user-select: none; 
+            touch-action: none; /* 모바일 스크롤 방지 */
         }
         canvas { display: block; }
         
@@ -152,32 +155,104 @@
         .tab-btn.active { background: white; color: #0f172a; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .tab-btn:hover:not(.active) { color: #334155; }
 
-        .view-toggle { display: flex; background: #f1f5f9; border-radius: 20px; padding: 4px; gap: 4px; font-size: 0.85rem; font-weight: 600; margin-left: auto; margin-right: 15px; }
-        .view-toggle label { cursor: pointer; padding: 6px 12px; border-radius: 16px; color: #64748b; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
-        .view-toggle label.active { background: white; color: #0ea5e9; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .close-modal-btn { cursor: pointer; font-size: 1.8rem; color: #94a3b8; line-height: 1; margin-left: 10px; }
         
         .tab-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
 
-        .msg-list-container { flex: 1; overflow-y: auto; padding: 0; background: #f8fafc; }
-        .list-item { padding: 20px 25px; border-bottom: 1px solid #f1f5f9; background: white; }
-        .list-date { font-size: 0.8rem; color: #94a3b8; margin-bottom: 6px; }
-        .list-receiver { font-weight: 700; color: #0ea5e9; margin-right: 6px; font-size: 0.95rem; }
-        .list-text { color: #334155; font-size: 1rem; word-break: break-all; line-height: 1.5; }
-        .empty-msg { text-align: center; padding: 40px; color: #94a3b8; font-size: 0.95rem; }
+        .empty-msg { text-align: center; padding: 40px; color: #94a3b8; font-size: 0.95rem; grid-column: span 3; }
         
         #my-msg-auth { padding: 20px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; z-index: 10; position: relative; }
         #my-name-input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; font-family: 'Pretendard'; }
         #my-msg-btn { background: #0ea5e9; color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Pretendard'; }
-        #mailbox-content-area { flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
-        #mailbox-canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; overflow: hidden; display: none; }
-        #mailbox-bg-canvas { width: 100%; height: 100%; cursor: pointer; }
-        #mailbox-placeholder { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #94a3b8; text-align: center; width: 100%; pointer-events: none; line-height: 1.6; }
-        #my-msg-list-container { flex: 1; overflow-y: auto; background: #f8fafc; display: none; }
+        
+        #mailbox-content-area { 
+            flex: 1; position: relative; display: flex; flex-direction: column; overflow: hidden; height: 100%; 
+            /* [NEW] 밤하늘 배경 적용 */
+            background: linear-gradient(to bottom, #0f172a, #1e293b);
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+        }
+        #mailbox-placeholder { margin-top: 50px; text-align: center; color: #cbd5e1; line-height: 1.6; }
+        
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 90; backdrop-filter: blur(4px); }
 
-        #input-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 620px; background: rgba(255, 255, 255, 0.95); padding: 8px 12px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 8px; z-index: 30; border: 1px solid #e2e8f0; backdrop-filter: blur(10px); }
+        /* [NEW] 포스트잇 그리드 스타일 */
+        .post-it-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3열 */
+            gap: 15px;
+            padding: 20px;
+            overflow-y: auto;
+            align-content: flex-start;
+        }
+
+        .post-it-card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 2px 2px 15px 2px; /* 포스트잇 느낌 */
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+            font-family: 'Gaegu', cursive;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            transition: transform 0.2s;
+            min-height: 140px; /* 최소 높이 */
+            height: auto; /* 내용에 따라 늘어남 */
+            align-self: start; /* 그리드 내에서 내용만큼만 높이 차지 */
+            color: #333;
+        }
+        .post-it-card:hover { transform: translateY(-3px); box-shadow: 2px 6px 12px rgba(0,0,0,0.1); z-index: 5; }
         
+        .post-it-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed rgba(0,0,0,0.1);
+            padding-bottom: 8px;
+        }
+        
+        .sender-info { display: flex; align-items: center; gap: 8px; }
+        .mini-avatar-canvas { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+        .sender-name { font-weight: 700; font-size: 1.1rem; color: #475569; }
+        .post-date { font-size: 0.8rem; color: rgba(0,0,0,0.4); }
+        
+        .post-body {
+            font-size: 1.15rem;
+            line-height: 1.4;
+            word-break: break-all;
+            flex: 1;
+        }
+
+        /* [NEW] 전송 애니메이션용 요소 (Updated Style) */
+        #flying-envelope {
+            position: fixed;
+            z-index: 9999;
+            width: 60px;
+            height: 40px;
+            pointer-events: none;
+            display: none;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.15));
+        }
+
+        #input-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 620px; background: rgba(255, 255, 255, 0.95); padding: 8px 12px; border-radius: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 8px; z-index: 30; border: 1px solid #e2e8f0; backdrop-filter: blur(10px); transition: all 0.5s ease; }
+        
+        /* 입력창이 접히는 애니메이션 클래스 */
+        .input-bar-folding {
+            width: 50px !important;
+            height: 50px !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            opacity: 0;
+            overflow: hidden;
+            transform: scale(0.1) translateX(-500%); /* 사라지는 효과 */
+        }
+        .input-elements-hidden { display: none !important; }
+
         .to-all-wrapper { display: flex; align-items: center; white-space: nowrap; font-size: 14px; font-weight: 600; color: #475569; margin-right: 2px; cursor: pointer; user-select: none; }
         .to-all-wrapper input { margin-right: 4px; accent-color: #0ea5e9; width: 16px; height: 16px; cursor: pointer; }
 
@@ -242,6 +317,10 @@
             #send-btn { width: 36px; height: 36px; font-size: 1rem; }
             #style-toggle-btn { width: 36px; height: 36px; font-size: 1.1rem; }
             .modal-window { width: 380px; height: 550px; }
+            .post-it-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; }
+            .post-it-card { min-height: 120px; padding: 12px; }
+            .sender-name { font-size: 1rem; }
+            .post-body { font-size: 1rem; }
         }
     </style>
 </head>
@@ -287,7 +366,7 @@
     <div id="guide-text" onclick="handleGuideClick()">
         <h2>2026 닷밀 신년맞이 롤링페이퍼 📜</h2>
         <p>
-            여기는 DOT을 굴려 멋진 것들을 만드는 방앗간, DOMILL입니다.<br>
+            여기는 DOT을 굴려 멋진 것들을 만드는 방앗간, DOTMILL입니다.<br>
             화면에 보이는 동료들을 클릭해서 휴식을 선물하세요.<br>
             그리고 동료들에게 익명으로 메시지를 전하세요.
         </p>
@@ -299,7 +378,7 @@
         <p>익명으로 메시지가 무사히 전달되었습니다! 📨</p>
     </div>
 
-    <!-- 로딩 오버레이 -->
+    <!-- 로딩 오버레이 (삭제는 하지 않고 유지하되, 전송시에는 애니메이션으로 대체됨) -->
     <div id="loading-overlay">
         <div class="spinner"></div>
         <div id="loading-text">방앗간 돌리는 중...<br>조금만 기다려주세요 🐹</div>
@@ -328,12 +407,6 @@
                 <button class="tab-btn" id="tab-all" onclick="setMailboxTab('ALL')">전체 메시지 📜</button>
             </div>
             
-            <!-- 내 메시지 탭일 때만 보이는 뷰 토글 -->
-            <div class="view-toggle" id="my-view-toggle">
-                <label id="toggle-list" onclick="setViewMode('list')">📄 목록</label>
-                <label id="toggle-scene" onclick="setViewMode('scene')" class="active">✨ 장면</label>
-            </div>
-            
             <span class="close-modal-btn" data-target="my-msg-modal">×</span>
         </div>
 
@@ -345,17 +418,24 @@
             </div>
             <div id="mailbox-content-area">
                 <div id="mailbox-placeholder">이름을 입력하고 확인을 눌러주세요.<br>(정확히 일치해야 합니다)</div>
-                <div id="my-msg-list-container"></div>
-                <div id="mailbox-canvas-container">
-                    <canvas id="mailbox-bg-canvas"></canvas>
-                </div>
+                <!-- [NEW] 포스트잇 그리드 컨테이너 -->
+                <div id="my-msg-grid" class="post-it-grid" style="display:none;"></div>
             </div>
         </div>
 
         <!-- TAB 2: 전체 메시지 내용 -->
         <div id="tab-content-all" class="tab-content" style="display:none;">
-            <div id="all-msg-list" class="msg-list-container"><div class="empty-msg">로딩 중... ⏳</div></div>
+            <!-- [NEW] 전체 메시지 그리드 컨테이너 -->
+            <div id="all-msg-grid" class="post-it-grid"><div class="empty-msg">로딩 중... ⏳</div></div>
         </div>
+    </div>
+
+    <!-- [NEW] 날아가는 편지 요소 (가시성 개선) -->
+    <div id="flying-envelope">
+        <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="#fff8dc"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
     </div>
 
     <div id="input-bar">
@@ -435,7 +515,14 @@
         '#3b82f6', '#1e293b', '#64748b', // Blue, Black, Gray (기존)
         '#ef4444', '#f97316', '#eab308', // Red, Orange, Yellow
         '#22c55e', '#0ea5e9', '#6366f1', '#a855f7' // Green, Sky, Indigo, Purple
-    ]; 
+    ];
+    // [NEW] 파스텔톤 배경색 (편지지용)
+    const CUSTOM_SHIRT_LIGHT_COLORS = [
+        '#dbeafe', '#f1f5f9', '#f8fafc', 
+        '#fee2e2', '#ffedd5', '#fef9c3', 
+        '#dcfce7', '#e0f2fe', '#e0e7ff', '#f3e8ff' 
+    ];
+
     const HAIR_ICONS = ['🧑', '🦱', '👱', '👩']; // 4 styles
     const ACC_ICONS = ['❌', '🎄', '🌸']; // 3 styles (Lantern -> Flower)
 
@@ -481,72 +568,23 @@
         const tabAll = document.getElementById('tab-all');
         const contentMy = document.getElementById('tab-content-my');
         const contentAll = document.getElementById('tab-content-all');
-        const myViewToggle = document.getElementById('my-view-toggle');
 
         if (tab === 'MY') {
             tabMy.classList.add('active');
             tabAll.classList.remove('active');
             contentMy.style.display = 'flex';
             contentAll.style.display = 'none';
-            myViewToggle.style.visibility = 'visible';
-            setViewMode(currentViewMode); 
         } else {
             tabMy.classList.remove('active');
             tabAll.classList.add('active');
             contentMy.style.display = 'none';
             contentAll.style.display = 'flex';
-            myViewToggle.style.visibility = 'hidden';
-            if (mbAnimationId) cancelAnimationFrame(mbAnimationId); 
             renderAllMessages();
         }
     }
 
-    let currentViewMode = 'scene';
-    const mbListContainer = document.getElementById('my-msg-list-container');
-    const mbCanvasContainer = document.getElementById('mailbox-canvas-container');
-    const mbToggleList = document.getElementById('toggle-list');
-    const mbToggleScene = document.getElementById('toggle-scene');
-
-    function setViewMode(mode) {
-        currentViewMode = mode;
-        if (mode === 'list') {
-            mbListContainer.style.display = 'block';
-            mbCanvasContainer.style.display = 'none';
-            mbToggleList.classList.add('active');
-            mbToggleScene.classList.remove('active');
-            if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
-        } else {
-            mbListContainer.style.display = 'none';
-            mbCanvasContainer.style.display = 'block';
-            mbToggleList.classList.remove('active');
-            mbToggleScene.classList.add('active');
-            resizeMailboxCanvas();
-            animateMailbox(); 
-        }
-    }
-
-    function resizeMailboxCanvas() {
-        const rect = document.getElementById('mailbox-content-area').getBoundingClientRect();
-        mbCanvas.width = rect.width;
-        mbCanvas.height = rect.height;
-    }
-
-    const mbCanvas = document.getElementById('mailbox-bg-canvas');
-    const mbCtx = mbCanvas.getContext('2d');
     const mbPlaceholder = document.getElementById('mailbox-placeholder');
-    let mbDancers = [];
-    let mbSnowflakes = [];
-    let mbAnimationId = null;
-    let mbMouse = { x: -1000, y: -1000 };
-
-    mbCanvas.addEventListener('mousemove', (e) => {
-        const rect = mbCanvas.getBoundingClientRect();
-        const scaleX = mbCanvas.width / rect.width;
-        const scaleY = mbCanvas.height / rect.height;
-        mbMouse.x = (e.clientX - rect.left) * scaleX;
-        mbMouse.y = (e.clientY - rect.top) * scaleY;
-    });
-    mbCanvas.addEventListener('mouseleave', () => { mbMouse.x = -1000; mbMouse.y = -1000; });
+    const mbGrid = document.getElementById('my-msg-grid');
 
     toAllCheck.addEventListener('change', (e) => {
         if (e.target.checked) {
@@ -558,14 +596,6 @@
 
     function showCustomAlert() {
         customAlert.style.display = 'block'; setTimeout(() => { customAlert.style.display = 'none'; }, 2500);
-    }
-
-    function showLoading() {
-        loadingOverlay.style.display = 'flex';
-    }
-
-    function hideLoading() {
-        loadingOverlay.style.display = 'none';
     }
 
     function showServerError() {
@@ -589,38 +619,85 @@
         const text = msgInput.value.trim();
         if (!text) return alert("내용을 입력해주세요!");
         
-        sendBtn.disabled = true; const originalPlaceholder = msgInput.placeholder;
+        sendBtn.disabled = true; 
+        const originalPlaceholder = msgInput.placeholder;
         msgInput.value = ''; msgInput.placeholder = '전송 중... 🚀';
         
         const styleData = JSON.stringify(currentStyle);
         const finalPayload = { name: receiver, text: text, style: styleData };
 
-        showLoading(); // [UI] 로딩 시작
+        // [NEW] 전송 애니메이션 시작
+        const inputBar = document.getElementById('input-bar');
+        const inputChildren = inputBar.children;
+        const flyingEnv = document.getElementById('flying-envelope');
+        const mailboxIcon = document.getElementById('mailbox-icon');
 
-        const performFetch = async (retries = 3, delay = 1500) => {
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    cache: 'no-cache', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-                    body: JSON.stringify(finalPayload) 
-                });
-            } catch (err) {
-                console.error("Send Error:", err);
-                if (retries > 1) {
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    return performFetch(retries - 1, delay * 2);
-                } else {
-                    throw err;
+        // 1. 입력바 접기
+        for(let c of inputChildren) c.classList.add('input-elements-hidden');
+        inputBar.classList.add('input-bar-folding');
+
+        // 2. 편지 날리기 애니메이션
+        // 입력바 위치에서 시작
+        const startRect = inputBar.getBoundingClientRect();
+        const endRect = mailboxIcon.getBoundingClientRect();
+        
+        // 시작점: 입력바의 중앙
+        const startX = startRect.left + startRect.width / 2;
+        const startY = startRect.top;
+
+        // 도착점: 우편함 아이콘의 중앙
+        const endX = endRect.left + endRect.width / 2;
+        const endY = endRect.top + endRect.height / 2;
+
+        const envWidth = 60; // 편지 너비 (CSS와 일치)
+        
+        flyingEnv.style.display = 'block';
+        // 편지 요소 자체를 시작점 중앙에 배치
+        flyingEnv.style.left = (startX - envWidth/2) + 'px';
+        flyingEnv.style.top = (startY) + 'px';
+        flyingEnv.style.transform = 'scale(1)';
+        flyingEnv.style.opacity = '1';
+        
+        // 이동 거리 계산
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+        
+        // 애니메이션 정의 (JS로 동적 위치 계산)
+        const animKeyframes = [
+            { transform: 'translate(0, 0) scale(1) rotate(0deg)', opacity: 1 },
+            // 중간 경로 (살짝 위로 솟았다가)
+            { transform: `translate(${deltaX * 0.5}px, ${deltaY - 100}px) scale(0.8) rotate(10deg)`, opacity: 1, offset: 0.5 },
+            // 도착점 (우편함 중앙으로 쏙 들어감)
+            { transform: `translate(${deltaX}px, ${deltaY}px) scale(0.1) rotate(0deg)`, opacity: 0 }
+        ];
+
+        // 4초 동안 애니메이션 + Fetch 동시 진행
+        const animPromise = flyingEnv.animate(animKeyframes, { duration: 4000, fill: 'forwards', easing: 'ease-in-out' }).finished;
+        
+        const fetchPromise = (async () => {
+             const performFetch = async (retries = 3, delay = 1500) => {
+                try {
+                    await fetch(GOOGLE_SCRIPT_URL, { 
+                        method: 'POST', 
+                        mode: 'no-cors', 
+                        cache: 'no-cache', 
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                        body: JSON.stringify(finalPayload) 
+                    });
+                } catch (err) {
+                    if (retries > 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return performFetch(retries - 1, delay * 2);
+                    } else { throw err; }
                 }
-            }
-        };
+            };
+            await performFetch();
+        })();
 
         try {
-            await performFetch();
-            hideLoading(); // [UI] 로딩 종료
+            await Promise.all([animPromise, fetchPromise]);
             
+            // 전송 완료 후
             if (window.distributeSingleMessage) {
                 window.distributeSingleMessage({ 
                     name: receiver, 
@@ -628,278 +705,126 @@
                     style: { ...currentStyle } 
                 });
             }
-            playSound('sent'); showCustomAlert();
+            playSound('sent'); 
+            showCustomAlert();
             if (!toAllCheck.checked) receiverInput.value = ''; 
+
         } catch (error) { 
             console.error("Final failure:", error);
-            showServerError(); // [UI] 최종 실패 시 에러 모달
+            showServerError(); 
         } finally { 
-            sendBtn.disabled = false; msgInput.placeholder = originalPlaceholder; msgInput.focus(); 
+            // UI 복구
+            sendBtn.disabled = false; 
+            msgInput.placeholder = originalPlaceholder; 
+            
+            flyingEnv.style.display = 'none';
+            inputBar.classList.remove('input-bar-folding');
+            for(let c of inputChildren) c.classList.remove('input-elements-hidden');
+            
+            msgInput.focus(); 
         }
     }
 
     async function renderAllMessages() {
-        const container = document.getElementById('all-msg-list');
+        const container = document.getElementById('all-msg-grid');
         container.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); container.innerHTML = ''; 
+            const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); 
+            
             if (!data || data.length === 0) { container.innerHTML = '<div class="empty-msg">메시지 없음</div>'; return; }
-            data.forEach(row => {
-                const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
-                const div = document.createElement('div'); div.className = 'list-item';
-                
-                let displayMsg = row[2] || "";
+            
+            container.innerHTML = '';
+            // 역순 정렬 (최신순)
+            const sortedData = [...data].reverse();
 
-                let displayReceiver = row[1];
-                let receiverClass = 'list-receiver';
-                if (displayReceiver === 'ALL') {
-                    displayReceiver = '모두에게 📢'; receiverClass = 'list-receiver green-txt'; 
-                } else {
-                    displayReceiver = `To. ${displayReceiver}`;
-                }
-                div.innerHTML = `<div class="list-date">${dateStr}</div><div><span class="${receiverClass}">${displayReceiver}</span> <span class="list-text">${displayMsg}</span></div>`;
-                container.appendChild(div);
+            sortedData.forEach(row => {
+                const card = createPostItElement(row);
+                container.appendChild(card);
+                
+                // 아바타 그리기
+                let style = { hair: 0, shirt: 0, acc: 0 };
+                try { style = JSON.parse(row[3]); } catch(e) {}
+                const canvas = card.querySelector('.mini-avatar-canvas');
+                drawMiniAvatar(canvas, style);
             });
         } catch (error) { container.innerHTML = '<div class="empty-msg">불러오기 실패!</div>'; }
     }
 
-    class Snowflake {
-        constructor(w, h) {
-            this.x = Math.random() * w; this.y = Math.random() * h;
-            this.size = Math.random() * 2 + 0.5; this.speed = Math.random() * 1 + 0.5;
-            this.opacity = Math.random() * 0.5 + 0.3;
-        }
-        update(w, h) {
-            this.y += this.speed; this.x += Math.sin(this.y * 0.05) * 0.5;
-            if (this.y > h) { this.y = -10; this.x = Math.random() * w; }
-        }
-        draw(ctx) {
-            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
-        }
+    // [NEW] 포스트잇 요소 생성 헬퍼 함수
+    function createPostItElement(row) {
+        const dateRaw = new Date(row[0]); 
+        const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
+        
+        let text = row[2] || "";
+        let styleJson = row[3];
+        let style = { hair: 0, shirt: 0, acc: 0 };
+        if (styleJson) { try { style = JSON.parse(styleJson); } catch(e) {} }
+
+        // 배경색 결정 (옷 색깔의 연한 버전)
+        let bgColor = CUSTOM_SHIRT_LIGHT_COLORS[style.shirt] || '#f8fafc';
+        
+        const card = document.createElement('div');
+        card.className = 'post-it-card';
+        card.style.backgroundColor = bgColor;
+        
+        let senderNameDisplay = row[1] === 'ALL' ? 'To. 모두' : `To. ${row[1]}`;
+
+        card.innerHTML = `
+            <div class="post-it-header">
+                <div class="sender-info">
+                    <canvas class="mini-avatar-canvas" width="30" height="30"></canvas>
+                    <span class="sender-name">${senderNameDisplay}</span>
+                </div>
+                <span class="post-date">${dateStr}</span>
+            </div>
+            <div class="post-body">${text}</div>
+        `;
+        return card;
     }
 
-    class PartyFairy {
-        constructor(msg, isPrivate, w, h) {
-            this.msg = msg; 
-            this.isPrivate = isPrivate; 
-            this.x = Math.random() * (w - 60) + 30;
-            this.y = Math.random() * (h - 100) + 80; 
-            
-            this.style = msg.style || { hair: 0, shirt: 0, acc: 0 };
-            
-            this.shirtColor = CUSTOM_SHIRT_COLORS[this.style.shirt] || CUSTOM_SHIRT_COLORS[0];
-
-            this.bodyOffset = Math.random() * 100;
-            this.dir = Math.random() < 0.5 ? -1 : 1;
-            this.speed = 0.5 + Math.random();
-            this.blinkTimer = Math.random() * 200;
-            this.isBlinking = false;
-            this.isHovered = false; 
-        }
-
-        update(w, h) {
-            this.bodyOffset += 0.15;
-            this.x += this.dir * this.speed * 0.3;
-            if (this.x < 30 || this.x > w - 30) this.dir *= -1;
-            this.blinkTimer--;
-            if (this.blinkTimer <= 0) {
-                this.isBlinking = true;
-                if (this.blinkTimer <= -10) { this.isBlinking = false; this.blinkTimer = 100 + Math.random() * 200; }
-            }
-        }
-
-        draw(ctx) {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            
-            const bounce = Math.sin(this.bodyOffset) * 6;
-            ctx.translate(0, bounce);
-
-            if (this.isPrivate) { ctx.shadowColor = '#ff69b4'; ctx.shadowBlur = 20; }
-
-            ctx.fillStyle = this.shirtColor;
-            ctx.fillRect(-8, -15, 16, 20); // Body
-            ctx.fillStyle = '#333';
-            ctx.fillRect(-8, 5, 16, 10); // Pants
-
-            ctx.fillStyle = '#fce4d4';
-            ctx.fillRect(-6, -24, 12, 9); 
-            
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#333';
-            if (this.isBlinking) {
-                ctx.fillRect(-4, -22, 3, 1); ctx.fillRect(2, -22, 3, 1);
-            } else {
-                ctx.fillRect(-4, -23, 2, 2); ctx.fillRect(2, -23, 2, 2);
-            }
-
-            this.drawHair(ctx);
-
-            ctx.strokeStyle = this.shirtColor; ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-8, -12); ctx.lineTo(-14, -12 - Math.cos(this.bodyOffset) * 5);
-            ctx.moveTo(8, -12); ctx.lineTo(14, -12 + Math.cos(this.bodyOffset) * 5);
-            ctx.stroke();
-
-            this.drawAcc(ctx);
-            this.drawBubble(ctx);
-
-            ctx.restore();
-        }
-
-        drawHair(ctx) {
-            ctx.fillStyle = '#4a3b2a';
-            const h = this.style.hair;
-            
-            if (h === 0) { // 기본/짧은머리 (단정한 숏컷)
-                ctx.fillRect(-7, -26, 14, 4); 
-                ctx.beginPath(); ctx.moveTo(-7, -24); ctx.lineTo(7, -24); ctx.quadraticCurveTo(8, -24, 8, -20); ctx.lineTo(-8, -20); ctx.quadraticCurveTo(-8, -24, -7, -24); ctx.fill();
-            } else if (h === 1) { // 파마머리 (동글동글)
-                ctx.beginPath(); 
-                ctx.arc(0, -25, 8, Math.PI, 0); 
-                ctx.arc(-6, -23, 4, 0, Math.PI*2);
-                ctx.arc(6, -23, 4, 0, Math.PI*2);
-                ctx.arc(0, -28, 4, 0, Math.PI*2);
-                ctx.fill();
-            } else if (h === 2) { // 묶음머리 (꽁지)
-                ctx.fillRect(-7, -26, 14, 4); 
-                ctx.beginPath(); ctx.arc(0, -28, 3.5, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(0, -28); ctx.quadraticCurveTo(5, -32, 6, -26); ctx.stroke();
-            } else { // 긴머리 (단발~장발)
-                ctx.fillRect(-8, -26, 16, 6); 
-                ctx.fillRect(-9, -22, 4, 12); ctx.fillRect(5, -22, 4, 12); // 양옆 머리 길게
-            }
-        }
-
-        drawAcc(ctx) {
-            const a = this.style.acc;
-            if (a === 1) { // 루돌프 (더 입체적인 뿔)
-                ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-                // 왼쪽 뿔
-                ctx.beginPath(); ctx.moveTo(-3, -25); ctx.lineTo(-8, -32); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(-6, -29); ctx.lineTo(-4, -33); ctx.stroke();
-                // 오른쪽 뿔
-                ctx.beginPath(); ctx.moveTo(3, -25); ctx.lineTo(8, -32); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(6, -29); ctx.lineTo(4, -33); ctx.stroke();
-                // 빨간 코
-                ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(0, -18, 1.5, 0, Math.PI*2); ctx.fill();
-            } else if (a === 2) { // 머리에 꽃 (NEW)
-                ctx.fillStyle = '#ff69b4'; // Pink petals
-                for(let i=0; i<5; i++) {
-                    const angle = (i * 2 * Math.PI) / 5;
-                    const r = 3;
-                    ctx.beginPath();
-                    ctx.arc(6 + Math.cos(angle)*r, -28 + Math.sin(angle)*r, 2, 0, Math.PI*2);
-                    ctx.fill();
-                }
-                ctx.fillStyle = '#fff'; // Center
-                ctx.beginPath(); ctx.arc(6, -28, 2, 0, Math.PI*2); ctx.fill();
-            }
-        }
-
-        drawBubble(ctx) {
-            const fullText = this.msg.text;
-            const summaryText = fullText.length > 8 ? fullText.substring(0, 8) + '..' : fullText;
-            const text = this.isHovered ? fullText : summaryText;
-
-            ctx.font = 'bold 12px "Pretendard", sans-serif';
-            const tm = ctx.measureText(text);
-            
-            // Measure name
-            ctx.font = '500 12px "Pretendard"'; 
-            let displayName = this.msg.name;
-            if (displayName === 'ALL') displayName = '모두에게';
-            else displayName = `To. ${displayName}`;
-            
-            const nm = ctx.measureText(displayName);
-            
-            const w = Math.min(Math.max(tm.width, nm.width) + 24, 220); 
-            
-            const words = this.msg.text.split('');
-            let lines = [];
-            let currentLine = words[0];
-            
-            ctx.font = 'bold 12px "Pretendard", sans-serif';
-            
-            for (let i = 1; i < words.length; i++) {
-                const width = ctx.measureText(currentLine + words[i]).width;
-                if (width < 200) {
-                    currentLine += words[i];
-                } else {
-                    lines.push(currentLine);
-                    currentLine = words[i];
-                }
-            }
-            lines.push(currentLine);
-            const h = lines.length * 18 + 30; 
-
-            let bubbleX = 0;
-            // Prevent going off screen (mbCanvas width is safer to check against than main canvas.width)
-            if (this.x - w/2 < 10) bubbleX = 10 - (this.x - w/2);
-            if (this.x + w/2 > mbCanvas.width - 10) bubbleX = (mbCanvas.width - 10) - (this.x + w/2);
-            
-            ctx.translate(bubbleX, 0);
-
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'; ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 10;
-            ctx.beginPath(); ctx.roundRect(-w/2, -h, w, h, 12); ctx.fill();
-            
-            ctx.beginPath(); 
-            ctx.moveTo(-bubbleX, 0); 
-            ctx.lineTo(-bubbleX - 6, -6); 
-            ctx.lineTo(-bubbleX + 6, -6); 
-            ctx.fill();
-
-            ctx.shadowBlur = 0; ctx.fillStyle = '#334155'; ctx.textAlign = 'center'; 
-            
-            lines.forEach((line, i) => {
-                ctx.fillText(line, 0, -h + 20 + (i * 18));
-            });
-
-            ctx.font = '500 12px "Pretendard"'; 
-            
-            if (this.msg.name === 'ALL') {
-                ctx.fillStyle = '#00e676';
-            } else {
-                ctx.fillStyle = '#ec4899';
-            }
-            ctx.fillText(displayName, 0, -10);
-            ctx.restore();
-        }
-    }
-
-    function animateMailbox() {
-        if (myMsgModal.style.display === 'none' || currentViewMode !== 'scene') return; 
+    // [NEW] 미니 아바타 그리기 함수
+    function drawMiniAvatar(canvas, style) {
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
         
-        mbCtx.clearRect(0, 0, mbCanvas.width, mbCanvas.height);
+        ctx.clearRect(0,0,w,h);
         
-        const time = Date.now() * 0.0005;
-        const g = mbCtx.createLinearGradient(0, 0, 0, mbCanvas.height);
-        g.addColorStop(0, '#0f172a'); g.addColorStop(1, '#312e81'); 
-        mbCtx.fillStyle = g; mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height);
+        // 배경
+        ctx.fillStyle = '#fce4d4'; // 얼굴색
+        ctx.beginPath(); ctx.arc(w/2, h/2 + 2, w/2 - 4, 0, Math.PI*2); ctx.fill();
 
-        mbCtx.save(); mbCtx.globalCompositeOperation = 'screen';
-        const lightX = mbCanvas.width/2 + Math.sin(time) * 100;
-        const lg = mbCtx.createRadialGradient(lightX, mbCanvas.height, 10, lightX, mbCanvas.height, 200);
-        lg.addColorStop(0, 'rgba(56, 189, 248, 0.3)'); lg.addColorStop(1, 'rgba(56, 189, 248, 0)');
-        mbCtx.fillStyle = lg; mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height); mbCtx.restore();
-
-        mbSnowflakes.forEach(s => { s.update(mbCanvas.width, mbCanvas.height); s.draw(mbCtx); });
-
-        let hoveredDancer = null;
-        mbDancers.forEach(d => {
-            d.update(mbCanvas.width, mbCanvas.height);
-            const dx = mbMouse.x - d.x; const dy = mbMouse.y - d.y;
-            if (Math.sqrt(dx*dx + dy*dy) < 30) hoveredDancer = d;
-            d.isHovered = false; 
-        });
-        if (hoveredDancer) hoveredDancer.isHovered = true;
-
-        mbDancers.sort((a, b) => a.y - b.y);
-        mbDancers.forEach(d => { if (d !== hoveredDancer) d.draw(mbCtx); });
-        if (hoveredDancer) hoveredDancer.draw(mbCtx);
-
-        mbAnimationId = requestAnimationFrame(animateMailbox);
+        // 헤어
+        ctx.fillStyle = '#4a3b2a';
+        ctx.save(); ctx.translate(w/2, h/2 + 2); ctx.scale(0.8, 0.8);
+        
+        const hr = style.hair;
+        if (hr === 0) { 
+            ctx.fillRect(-7, -12, 14, 4); 
+            ctx.beginPath(); ctx.moveTo(-7, -10); ctx.lineTo(7, -10); ctx.quadraticCurveTo(8, -10, 8, -6); ctx.lineTo(-8, -6); ctx.quadraticCurveTo(-8, -10, -7, -10); ctx.fill();
+        } else if (hr === 1) { 
+            ctx.beginPath(); ctx.arc(0, -11, 8, Math.PI, 0); ctx.fill();
+            ctx.beginPath(); ctx.arc(-6, -9, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(6, -9, 4, 0, Math.PI*2); ctx.fill();
+        } else if (hr === 2) { 
+            ctx.fillRect(-7, -12, 14, 4); ctx.beginPath(); ctx.arc(0, -14, 3.5, 0, Math.PI*2); ctx.fill();
+        } else { 
+            ctx.fillRect(-8, -12, 16, 6); ctx.fillRect(-9, -8, 4, 12); ctx.fillRect(5, -8, 4, 12); 
+        }
+        
+        // 장식
+        const ac = style.acc;
+        if (ac === 1) { // 루돌프
+            ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2; 
+            ctx.beginPath(); ctx.moveTo(-3, -11); ctx.lineTo(-8, -18); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(3, -11); ctx.lineTo(8, -18); ctx.stroke();
+            ctx.fillStyle = 'red'; ctx.beginPath(); ctx.arc(0, -4, 1.5, 0, Math.PI*2); ctx.fill();
+        } else if (ac === 2) { // 꽃
+            ctx.fillStyle = '#ff69b4'; ctx.beginPath(); ctx.arc(6, -14, 3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(6, -14, 1, 0, Math.PI*2); ctx.fill();
+        }
+        
+        ctx.restore();
     }
 
     async function checkMyMessages() {
@@ -907,57 +832,43 @@
         if (!myName) return alert("본인의 이름을 입력해주세요.");
         
         mbPlaceholder.style.display = 'block'; mbPlaceholder.innerHTML = '✨ 우편함 파티장 입장 중... ✨';
-        mbListContainer.innerHTML = '<div class="empty-msg">로딩 중...</div>';
-        mbDancers = []; mbSnowflakes = [];
-        
-        resizeMailboxCanvas();
-        for(let i=0; i<50; i++) mbSnowflakes.push(new Snowflake(mbCanvas.width, mbCanvas.height));
+        mbGrid.style.display = 'none';
+        mbGrid.innerHTML = '';
 
         try {
             const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); 
             if (!data || data.length === 0) { 
                 const emptyText = '아직 도착한 편지가 없어요 😢';
-                mbPlaceholder.innerHTML = emptyText; mbListContainer.innerHTML = `<div class="empty-msg">${emptyText}</div>`; return; 
+                mbPlaceholder.innerHTML = emptyText; return; 
             }
 
-            const myMessages = data.filter(row => row[1] === 'ALL' || row[1].replace(/\s/g, '') === myName.replace(/\s/g, ''));
-            
+            // [FIXED] '모두'에게(ALL) 보낸 메시지 제외, 오직 내 이름 일치만
+            const myMessages = data.filter(row => row[1].replace(/\s/g, '') === myName.replace(/\s/g, ''));
+            // 최신순 정렬 (역순)
+            myMessages.reverse();
+
             if (myMessages.length === 0) {
-                const emptyText = `'${myName}'님과 모두에게 도착한<br>메시지가 아직 없네요. 텅~`;
-                mbPlaceholder.innerHTML = emptyText; mbListContainer.innerHTML = `<div class="empty-msg">${emptyText}</div>`; return;
+                const emptyText = `'${myName}'님에게 도착한<br>메시지가 아직 없네요. 텅~`;
+                mbPlaceholder.innerHTML = emptyText; return;
             }
 
-            mbListContainer.innerHTML = '';
+            mbPlaceholder.style.display = 'none';
+            mbGrid.style.display = 'grid';
+            
             myMessages.forEach(row => {
-                const dateRaw = new Date(row[0]); const dateStr = (dateRaw.getMonth()+1) + '/' + dateRaw.getDate() + ' ' + dateRaw.getHours() + ':' + String(dateRaw.getMinutes()).padStart(2,'0');
-                const div = document.createElement('div'); div.className = 'list-item';
+                const card = createPostItElement(row);
+                mbGrid.appendChild(card);
                 
-                let displayMsg = row[2] || "";
-
-                let prefix = (row[1] === 'ALL') ? '<span style="color:#00e676; font-size:0.8rem; margin-right:5px; font-weight:bold;">[전체]</span>' : '<span style="color:#ec4899; font-size:0.8rem; margin-right:5px; font-weight:bold;">[나에게]</span>';
-                div.innerHTML = `<div class="list-date">${dateStr}</div><div>${prefix}<span class="list-text" style="font-weight:bold;">${displayMsg}</span></div>`;
-                mbListContainer.appendChild(div);
-            });
-
-            mbPlaceholder.style.display = 'none'; 
-            const displayMessages = myMessages.slice(0, 10); 
-            displayMessages.forEach(row => {
-                const isPrivate = (row[1] !== 'ALL');
-                
-                let text = row[2] || "";
-                let styleJson = row[3];
+                // 아바타 그리기
                 let style = { hair: 0, shirt: 0, acc: 0 };
-                if (styleJson) {
-                    try { style = JSON.parse(styleJson); } catch(e) {}
-                }
-
-                mbDancers.push(new PartyFairy({ name: row[1], text: text, style: style }, isPrivate, mbCanvas.width, mbCanvas.height));
+                try { style = JSON.parse(row[3]); } catch(e) {}
+                const canvas = card.querySelector('.mini-avatar-canvas');
+                drawMiniAvatar(canvas, style);
             });
-
-            if (currentViewMode === 'scene') { if (mbAnimationId) cancelAnimationFrame(mbAnimationId); animateMailbox(); }
 
         } catch (error) { 
-            mbPlaceholder.innerHTML = '입장 실패! 다시 시도해주세요.'; mbListContainer.innerHTML = '<div class="empty-msg">오류가 발생했습니다.</div>';
+            console.error(error);
+            mbPlaceholder.innerHTML = '입장 실패! 다시 시도해주세요.'; 
         }
     }
 
@@ -967,13 +878,10 @@
         btn.addEventListener('click', () => {
             const targetId = btn.getAttribute('data-target');
             document.getElementById(targetId).style.display = 'none'; overlay.style.display = 'none';
-            if (targetId === 'my-msg-modal') { if (mbAnimationId) cancelAnimationFrame(mbAnimationId); }
         });
     });
     function hideAllModals() {
-        // listModal은 제거됨, myMsgModal만 닫음
         myMsgModal.style.display = 'none'; overlay.style.display = 'none';
-        if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
     }
     overlay.addEventListener('click', hideAllModals);
     
@@ -985,22 +893,12 @@
         // 탭 초기화 (내 우편함)
         setMailboxTab('MY');
         
-        // 내 우편함 씬 초기화
+        // 내 우편함 초기화
         myNameInput.focus();
         mbPlaceholder.style.display = 'block'; mbPlaceholder.innerHTML = '이름을 입력하고 확인을 눌러주세요.';
-        mbListContainer.innerHTML = ''; mbCtx.clearRect(0,0, mbCanvas.width, mbCanvas.height);
-        resizeMailboxCanvas(); mbSnowflakes = []; for(let i=0; i<30; i++) mbSnowflakes.push(new Snowflake(mbCanvas.width, mbCanvas.height));
-        if (mbAnimationId) cancelAnimationFrame(mbAnimationId);
-        
-        function waitLoop() {
-            if (myMsgModal.style.display === 'none' || mbDancers.length > 0 || currentViewMode !== 'scene' || currentMailboxTab !== 'MY') return;
-            mbCtx.fillStyle = '#0f172a'; mbCtx.fillRect(0,0, mbCanvas.width, mbCanvas.height);
-            mbSnowflakes.forEach(s => { s.update(mbCanvas.width, mbCanvas.height); s.draw(mbCtx); });
-            mbAnimationId = requestAnimationFrame(waitLoop);
-        }
-        waitLoop();
+        mbGrid.style.display = 'none';
+        mbGrid.innerHTML = '';
     };
-    window.addEventListener('resize', () => { if (myMsgModal.style.display === 'flex') { resizeMailboxCanvas(); } }); 
 
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -1091,8 +989,9 @@
     function triggerDotPour() {
         const guideText = document.getElementById('guide-text');
         const rect = guideText.getBoundingClientRect();
+        // Adjust for canvas scale if needed, but assuming full screen canvas matches client coords
         const startX = rect.left + rect.width / 2;
-        const startY = rect.bottom; // 박스 아래에서 쏟아지게
+        const startY = rect.bottom; 
         
         for(let i=0; i<10; i++) {
              // 기존 particles 배열에서 랜덤한 타겟 좌표를 가져옴 (로고를 구성하는 픽셀 중 하나)
@@ -1116,7 +1015,6 @@
                 p.targetX = targetP.targetX;
                 p.targetY = targetP.targetY;
             } else {
-                // 파티클이 하나도 없을 경우 (거의 없겠지만) 화면 중앙으로
                 p.targetX = canvas.width/2 + (Math.random()-0.5)*100;
                 p.targetY = canvas.height/2 + (Math.random()-0.5)*50;
             }
@@ -1140,7 +1038,7 @@
                 } 
                 // [NEW] 만약 눈 치우기 모드였다면 IDLE로 복귀
                 if (f.busyState === 'SWEEPING' || f.busyState === 'MOVING_TO_SWEEP') {
-                    f.busyState = 'NONE'; // or whatever default busy logic uses
+                    f.busyState = 'NONE'; 
                 }
                 f.state = 'IDLE'; 
             } 
@@ -1148,6 +1046,7 @@
         isLogoComplete = false;
         mainSnowflakes = [];
         santaObj.active = false;
+        starlightCache = null; // Reset cache
         playSound('reset');
     };
 
@@ -1156,10 +1055,9 @@
         if(santaTimer) clearTimeout(santaTimer);
         santaTimer = setTimeout(() => {
             isSantaMode = false;
-        }, 7000); // 30초 -> 7초
+        }, 7000); 
     }
 
-    // [FIXED] MainSnowflake 클래스 복원 (메인 화면 로고 완성 시 눈 내림 효과용)
     class MainSnowflake {
         constructor(w, h) {
             this.x = Math.random() * w;
@@ -1182,7 +1080,6 @@
         }
     }
 
-    // [FIXED] drawPixelSanta 함수 복원
     function drawPixelSanta(ctx, x, y) {
         ctx.save();
         ctx.translate(x, y);
@@ -1225,49 +1122,67 @@
         ctx.restore();
     }
     
-    // [NEW] 반짝이는 텍스트 그리기 함수 (starlight text)
+    // [OPTIMIZED] Starlight Text with Caching
+    let starlightCache = null;
+
     function drawStarlightText(ctx, text, x, y) {
-        // 임시 캔버스에 텍스트를 그립니다.
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = 600; // 충분한 크기
-        tempCanvas.height = 100;
-        
-        tempCtx.font = '900 50px "Pretendard", sans-serif';
-        tempCtx.fillStyle = '#fff';
-        tempCtx.textAlign = 'center';
-        tempCtx.textBaseline = 'middle';
-        tempCtx.fillText(text, tempCanvas.width / 2, tempCanvas.height / 2);
-        
-        const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-        const data = imageData.data;
-        
-        ctx.save();
-        // 텍스트를 화면 중앙(x,y)에 배치하기 위한 오프셋 계산
-        const offsetX = x - tempCanvas.width / 2;
-        const offsetY = y - tempCanvas.height / 2;
-        
-        // 픽셀 스킵 간격 (너무 촘촘하지 않게)
-        const step = 4; 
-        
-        for (let py = 0; py < tempCanvas.height; py += step) {
-            for (let px = 0; px < tempCanvas.width; px += step) {
-                const index = (py * tempCanvas.width + px) * 4;
-                if (data[index + 3] > 128) { // 알파값이 있으면
-                    // 반짝이는 효과
-                    const twinkle = Math.random() > 0.8 ? 1.5 : 1;
-                    const size = Math.random() * 2 * twinkle;
-                    
-                    // 은/금/흰색 랜덤 색상
-                    const colors = ['#ffffff', '#fffacd', '#ffd700', '#c0c0c0'];
-                    ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    ctx.beginPath();
-                    ctx.arc(offsetX + px, offsetY + py, size, 0, Math.PI * 2);
-                    ctx.fill();
+        // 1. Generate Cache if not exists or if text/position significantly changed (logic simplified to single use case here)
+        if (!starlightCache) {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = 600; 
+            tempCanvas.height = 100;
+            
+            tempCtx.font = '900 50px "Pretendard", sans-serif';
+            tempCtx.fillStyle = '#fff';
+            tempCtx.textAlign = 'center';
+            tempCtx.textBaseline = 'middle';
+            tempCtx.fillText(text, tempCanvas.width / 2, tempCanvas.height / 2);
+            
+            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const data = imageData.data;
+            const points = [];
+            
+            const step = 4; // Skip pixels for performance
+            
+            for (let py = 0; py < tempCanvas.height; py += step) {
+                for (let px = 0; px < tempCanvas.width; px += step) {
+                    const index = (py * tempCanvas.width + px) * 4;
+                    if (data[index + 3] > 128) {
+                        points.push({
+                            x: px - tempCanvas.width / 2,
+                            y: py - tempCanvas.height / 2
+                        });
+                    }
                 }
             }
+            starlightCache = points;
         }
+
+        // 2. Draw from Cache
+        ctx.save();
+        ctx.translate(x, y);
+        
+        const colors = ['#ffffff', '#fffacd', '#ffd700', '#c0c0c0'];
+        
+        starlightCache.forEach(pt => {
+             // 반짝이는 효과 (Math.random() calls are still needed per frame but much cheaper than getImageData)
+            if (Math.random() > 0.9) {
+                 const twinkle = Math.random() > 0.8 ? 1.5 : 1;
+                 const size = Math.random() * 2 * twinkle;
+                 ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+                 ctx.beginPath();
+                 ctx.arc(pt.x, pt.y, size, 0, Math.PI * 2);
+                 ctx.fill();
+            } else if (Math.random() > 0.5) {
+                // Static dim stars to keep shape visible
+                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                 ctx.beginPath();
+                 ctx.arc(pt.x, pt.y, 1, 0, Math.PI * 2);
+                 ctx.fill();
+            }
+        });
+
         ctx.restore();
     }
 
@@ -1276,6 +1191,11 @@
             this.targetX=tx;
             this.targetY=ty;
             this.baseColor=c;
+            
+            // [FIXED] Use logical width/height instead of canvas.width/height (physical)
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            
             this.x=zones.hopper.x+(Math.random()-0.5)*40;
             this.y=zones.hopper.y-20;
             this.state='WAITING';
@@ -1348,18 +1268,44 @@
 
     class Fairy {
         constructor(role, idx) {
-            this.role = role; this.x = canvas.width/2; this.y = canvas.height/2; this.targetItem = null; this.state = 'IDLE';
+            this.role = role; this.x = window.innerWidth/2; this.y = window.innerHeight/2; this.targetItem = null; this.state = 'IDLE';
             this.colorShirt = ['#a3d2ca', '#ffc3a0', '#fff'][Math.floor(Math.random()*3)]; this.animFrame = Math.random()*100;
             this.isPaused=false; this.pauseTimer=null; this.busyState='NONE'; this.busyTimer=Math.random()*500;
             this.busyTargetX=0; this.busyTargetY=0; this.seatX=0; this.seatY=0;
             this.assignedMessage = null; this.assignmentTime = 0; 
             this.customStyle = null; 
 
+            // Caching for text bubble
+            this._cachedLines = null;
+
             if(role==='ENGINEER'){this.x=zones.beltStart.x+(zones.beltEnd.x-zones.beltStart.x)*0.5;this.y=zones.beltStart.y+30;}
-            else if(role==='OFFICE'){ const c=Math.ceil(CONFIG.officeCount/2),r=Math.floor(idx/c),cl=idx%c,dw=60,dh=60,tw=c*dw,sx=(canvas.width-tw)/2+30,sy=zones.office.y+50; this.seatX=sx+cl*dw;this.seatY=sy+r*dh;this.x=this.seatX;this.y=this.seatY;this.busyState='TYPING';} 
+            else if(role==='OFFICE'){ 
+                // [FIXED] 2줄 고정 중앙 정렬 (자동 줄바꿈 제거)
+                const totalCount = CONFIG.officeCount; // 50
+                const cols = Math.ceil(totalCount / 2); // 25열 고정
+                const colWidth = 60;
+                const rowHeight = 60;
+                
+                // 전체 그리드 너비 계산
+                const gridWidth = cols * colWidth;
+                
+                // 화면 중앙 정렬을 위한 시작점 계산 (화면보다 넓어도 중앙 기준)
+                const startX = (window.innerWidth - gridWidth) / 2 + colWidth / 2;
+                
+                const r = Math.floor(idx / cols); // 0 또는 1 (2줄)
+                const c = idx % cols;
+                
+                this.seatX = startX + c * colWidth;
+                this.seatY = zones.office.y + 50 + r * rowHeight;
+                
+                this.x = this.seatX;
+                this.y = this.seatY;
+                this.busyState='TYPING';
+            } 
             else if(role==='FOREMAN'){ 
-                this.x = canvas.width/2 - 250; 
-                this.y = canvas.height/2 - 20; 
+                // [FIXED] Foreman Position Adjustment
+                this.x = window.innerWidth/2 - 250; 
+                this.y = window.innerHeight/2 - 70; // Stand on top of scaffold (scaffold top is roughly center - 60)
             }
         }
         giveVacation() { 
@@ -1395,8 +1341,9 @@
              // 빗자루질 로직: 랜덤하게 돌아다니며 청소
              if (this.busyState !== 'SWEEPING' && this.busyState !== 'MOVING_TO_SWEEP') {
                  this.busyState = 'MOVING_TO_SWEEP';
-                 this.busyTargetX = canvas.width * 0.1 + Math.random() * canvas.width * 0.8;
-                 this.busyTargetY = canvas.height * 0.5 + Math.random() * canvas.height * 0.4;
+                 // Use logical width
+                 this.busyTargetX = window.innerWidth * 0.1 + Math.random() * window.innerWidth * 0.8;
+                 this.busyTargetY = window.innerHeight * 0.5 + Math.random() * window.innerHeight * 0.4;
              }
              
              if (this.busyState === 'MOVING_TO_SWEEP') {
@@ -1408,8 +1355,8 @@
                  this.busyTimer -= 1 * GAME_SPEED;
                  if (this.busyTimer <= 0) {
                      this.busyState = 'MOVING_TO_SWEEP';
-                     this.busyTargetX = canvas.width * 0.1 + Math.random() * canvas.width * 0.8;
-                     this.busyTargetY = canvas.height * 0.5 + Math.random() * canvas.height * 0.4;
+                     this.busyTargetX = window.innerWidth * 0.1 + Math.random() * window.innerWidth * 0.8;
+                     this.busyTargetY = window.innerHeight * 0.5 + Math.random() * window.innerHeight * 0.4;
                  }
              }
         }
@@ -1449,7 +1396,7 @@
         performBusyAction(){
             if(this.busyTimer<=0){
                 const r=Math.random();
-                if(r<0.5){this.busyState='PATROL';this.busyTargetX=canvas.width/2+(Math.random()-0.5)*400;this.busyTargetY=canvas.height/2+(Math.random()-0.5)*150;}
+                if(r<0.5){this.busyState='PATROL';this.busyTargetX=window.innerWidth/2+(Math.random()-0.5)*400;this.busyTargetY=window.innerHeight/2+(Math.random()-0.5)*150;}
                 else if(r<0.8)this.busyState='CLEAN'; else this.busyState='HAMMER';
                 this.busyTimer=60+Math.random()*120;
             }
@@ -1457,7 +1404,7 @@
             
             if(this.busyState==='PATROL')this.moveTo(this.busyTargetX,this.busyTargetY);
             else if(this.busyState==='CLEAN')this.x+=Math.sin(Date.now()*0.02 * GAME_SPEED)*0.5 * GAME_SPEED;
-            else if(this.busyState==='HAMMER'){if(Math.abs(this.x-canvas.width/2)>300)this.moveTo(canvas.width/2,canvas.height/2);}
+            else if(this.busyState==='HAMMER'){if(Math.abs(this.x-window.innerWidth/2)>300)this.moveTo(window.innerWidth/2,window.innerHeight/2);}
         }
 
         moveTo(tx,ty){
@@ -1472,7 +1419,6 @@
             return false;
         }
         
-        // [FIXED] 빗자루 그리기 메서드 복원
         drawBroom(ctx) {
             ctx.save();
             const angle = Math.sin(Date.now() * 0.01 * GAME_SPEED) * 0.5;
@@ -1518,7 +1464,7 @@
 
             if (this.customStyle) {
                 ctx.save();
-                ctx.translate(0, 8); // [FIX] Align head parts to Fairy's lower face position
+                ctx.translate(0, 8); 
 
                 ctx.fillStyle = '#4a3b2a';
                 const hr = this.customStyle.hair;
@@ -1594,28 +1540,45 @@
         drawBubble() {
             if (!this.assignedMessage) return;
             const msg = this.assignedMessage;
-            ctx.save(); ctx.translate(this.x, this.y - 35);
-            ctx.font = 'bold 14px "Pretendard", sans-serif'; const tm = ctx.measureText(msg.text), nm = ctx.measureText(msg.name);
-            const w = Math.min(Math.max(tm.width, nm.width) + 24, 220); 
             
-            const words = msg.text.split('');
-            let lines = [];
-            let currentLine = words[0];
-            for (let i = 1; i < words.length; i++) {
-                const width = ctx.measureText(currentLine + words[i]).width;
-                if (width < 200) {
-                    currentLine += words[i];
-                } else {
-                    lines.push(currentLine);
-                    currentLine = words[i];
-                }
+            // Use cached calculation if available and text matches
+            if (!this._cachedLines || this._lastText !== msg.text) {
+                 ctx.save();
+                 // We need a dummy context measure here to populate cache
+                 // Assuming standard font size for measurement
+                 ctx.font = 'bold 14px "Pretendard", sans-serif'; 
+                 const tm = ctx.measureText(msg.text);
+                 const nm = ctx.measureText(msg.name);
+                 
+                 this._cachedWidth = Math.min(Math.max(tm.width, nm.width) + 24, 220);
+                 
+                 const words = msg.text.split('');
+                 this._cachedLines = [];
+                 let currentLine = words[0];
+                 for (let i = 1; i < words.length; i++) {
+                    const width = ctx.measureText(currentLine + words[i]).width;
+                    if (width < 200) {
+                        currentLine += words[i];
+                    } else {
+                        this._cachedLines.push(currentLine);
+                        currentLine = words[i];
+                    }
+                 }
+                 this._cachedLines.push(currentLine);
+                 this._cachedHeight = this._cachedLines.length * 18 + 30;
+                 this._lastText = msg.text;
+                 ctx.restore();
             }
-            lines.push(currentLine);
-            const h = lines.length * 18 + 30; 
+
+            const w = this._cachedWidth;
+            const h = this._cachedHeight;
+
+            ctx.save(); ctx.translate(this.x, this.y - 35);
 
             let bubbleX = 0;
+            const canvasW = window.innerWidth;
             if (this.x - w/2 < 10) bubbleX = 10 - (this.x - w/2);
-            if (this.x + w/2 > canvas.width - 10) bubbleX = (canvas.width - 10) - (this.x + w/2);
+            if (this.x + w/2 > canvasW - 10) bubbleX = (canvasW - 10) - (this.x + w/2);
             
             ctx.translate(bubbleX, 0);
 
@@ -1630,7 +1593,8 @@
 
             ctx.shadowBlur = 0; ctx.fillStyle = '#334155'; ctx.textAlign = 'center'; 
             
-            lines.forEach((line, i) => {
+            ctx.font = 'bold 14px "Pretendard", sans-serif';
+            this._cachedLines.forEach((line, i) => {
                 ctx.fillText(line, 0, -h + 20 + (i * 18));
             });
 
@@ -1648,45 +1612,90 @@
     }
 
     function init() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        if (canvas.width === 0 || canvas.height === 0) return;
-        zones.hopper = { x: 100, y: 100 }; zones.beltStart = { x: 100, y: 180 }; zones.beltEnd = { x: canvas.width * 0.3, y: canvas.height * 0.6 }; zones.storage = { x: canvas.width * 0.3 + 20, y: canvas.height * 0.6 + 20 }; zones.office = { x: 0, y: canvas.height - 200, w: canvas.width, h: 200 };
+        // High DPI support
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        
+        ctx.scale(dpr, dpr);
+        
+        // Use logical dimensions for game logic
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        if (width === 0 || height === 0) return;
+        
+        // [FIXED] 초기 버전 zones 설정 (고정 높이)
+        zones.hopper = { x: 100, y: 100 }; 
+        zones.beltStart = { x: 100, y: 180 }; 
+        zones.beltEnd = { x: width * 0.3, y: height * 0.6 }; 
+        zones.storage = { x: width * 0.3 + 20, y: height * 0.6 + 20 }; 
+        zones.office = { x: 0, y: height - 200, w: width, h: 200 };
+        
+        // Resize 시 캐시 리셋
+        starlightCache = null;
+
         particles=[]; fairies=[];
-        ctx.font = CONFIG.font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'white'; ctx.fillText(CONFIG.text, canvas.width / 2, canvas.height / 2);
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height); ctx.clearRect(0,0, canvas.width, canvas.height);
-        for(let y=0; y<data.height; y+=CONFIG.pixelSize) for(let x=0; x<data.width; x+=CONFIG.pixelSize) if(data.data[(y * 4 * data.width) + (x * 4) + 3] > 128) particles.push(new Particle(x, y, CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)]));
+        
+        // Analyze text pixels
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = width;
+        tempCanvas.height = height;
+        
+        tempCtx.font = CONFIG.font; 
+        tempCtx.textAlign = 'center'; 
+        tempCtx.textBaseline = 'middle'; 
+        tempCtx.fillStyle = 'white'; 
+        tempCtx.fillText(CONFIG.text, width / 2, height / 2);
+        
+        const data = tempCtx.getImageData(0, 0, width, height);
+        
+        for(let y=0; y<height; y+=CONFIG.pixelSize) {
+            for(let x=0; x<width; x+=CONFIG.pixelSize) {
+                if(data.data[(y * 4 * width) + (x * 4) + 3] > 128) {
+                    particles.push(new Particle(x, y, CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)]));
+                }
+            }
+        }
+        
         fairies.push(new Fairy('FOREMAN'));
         for(let i=0; i<CONFIG.builderCount; i++) fairies.push(new Fairy('BUILDER'));
         for(let i=0; i<CONFIG.engineerCount; i++) fairies.push(new Fairy('ENGINEER'));
         for(let i=0; i<CONFIG.officeCount; i++) fairies.push(new Fairy('OFFICE', i));
     }
 
-    function isVisible(f) { return f.x > 20 && f.x < canvas.width - 20 && f.y > 0 && f.y < canvas.height; }
+    function isVisible(f) { return f.x > 20 && f.x < canvas.width/(window.devicePixelRatio||1) - 20 && f.y > 0 && f.y < canvas.height/(window.devicePixelRatio||1); }
 
     window.distributeSingleMessage = (newMsg) => {
         let target = fairies.find(f => f.assignedMessage === null && isVisible(f));
         if (!target) {
             const visibleFairies = fairies.filter(f => isVisible(f));
-            if (visibleFairies.length > 0) { target = visibleFairies[Math.floor(Math.random() * visibleFairies.length)]; } 
+            if (visibleFairies.length > 0) { target = visibleFairies[Math.floor(Math.random() * visibleFairies.length)]; } 
             else { target = fairies[Math.floor(Math.random() * fairies.length)]; }
         }
-        if (target) { 
-            target.assignedMessage = newMsg; 
+        if (target) { 
+            target.assignedMessage = newMsg; 
             target.assignmentTime = Date.now();
             if(newMsg.style) target.customStyle = newMsg.style;
         }
     };
 
     function drawEnvironment() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
         if (isLogoComplete) {
             // [NEW] Night Mode Background
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            const grad = ctx.createLinearGradient(0, 0, 0, height);
             grad.addColorStop(0, '#0f172a'); 
             grad.addColorStop(1, '#1e1b4b');
             ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, width, height);
         } else {
-             ctx.clearRect(0, 0, canvas.width, canvas.height); 
+             ctx.clearRect(0, 0, width, height); 
         }
 
         ctx.fillStyle = '#999'; ctx.beginPath(); ctx.moveTo(zones.hopper.x - 30, zones.hopper.y - 50); ctx.lineTo(zones.hopper.x + 30, zones.hopper.y - 50); ctx.lineTo(zones.hopper.x + 10, zones.hopper.y); ctx.lineTo(zones.hopper.x - 10, zones.hopper.y); ctx.fill();
@@ -1697,22 +1706,30 @@
         }
         
         ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 30; ctx.setLineDash([10, 20]); ctx.lineDashOffset = beltOffset; ctx.beginPath(); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltEnd.x, zones.beltEnd.y); ctx.stroke(); ctx.setLineDash([]);
-        ctx.lineWidth = 5; ctx.strokeStyle = '#64748b'; ctx.beginPath(); ctx.moveTo(zones.beltEnd.x, zones.beltEnd.y); ctx.lineTo(zones.beltEnd.x, canvas.height); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltStart.x, canvas.height); ctx.stroke();
-        const lx = canvas.width/2 - 250; const ly = canvas.height/2 + 60; ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - 120); ctx.moveTo(lx + 30, ly); ctx.lineTo(lx + 30, ly - 120); for(let i=0; i<5; i++) { ctx.moveTo(lx, ly - 20 - (i*20)); ctx.lineTo(lx+30, ly - 20 - (i*20)); } ctx.stroke();
-        ctx.fillStyle = '#f8fafc'; ctx.fillRect(zones.office.x, zones.office.y, zones.office.w, zones.office.h); ctx.fillStyle = '#e2e8f0'; ctx.fillRect(zones.office.x, canvas.height - 50, zones.office.w, 50);
+        ctx.lineWidth = 5; ctx.strokeStyle = '#64748b'; ctx.beginPath(); ctx.moveTo(zones.beltEnd.x, zones.beltEnd.y); ctx.lineTo(zones.beltEnd.x, height); ctx.moveTo(zones.beltStart.x, zones.beltStart.y); ctx.lineTo(zones.beltStart.x, height); ctx.stroke();
+        
+        // [FIXED] 감독관 비계 위치 (초기 고정값)
+        const lx = width/2 - 250; 
+        const ly = height/2 + 60; 
+        
+        ctx.strokeStyle = '#8d6e63'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx, ly - 120); ctx.moveTo(lx + 30, ly); ctx.lineTo(lx + 30, ly - 120); for(let i=0; i<5; i++) { ctx.moveTo(lx, ly - 20 - (i*20)); ctx.lineTo(lx+30, ly - 20 - (i*20)); } ctx.stroke();
+        
+        // [FIXED] 사무실 바닥 영역 그리기 (초기 zones.office 사용)
+        ctx.fillStyle = '#f8fafc'; ctx.fillRect(zones.office.x, zones.office.y, zones.office.w, zones.office.h); 
+        ctx.fillStyle = '#e2e8f0'; ctx.fillRect(zones.office.x, height - 50, zones.office.w, 50);
         
         fairies.forEach((f, i) => {
             if (f.role === 'OFFICE') {
                 const deskX = f.seatX; const deskY = f.seatY;
-                ctx.fillStyle = '#cbd5e1'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#475569'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25); 
+                ctx.fillStyle = '#cbd5e1'; ctx.fillRect(deskX - 25, deskY + 10, 50, 30); ctx.fillStyle = '#475569'; ctx.fillRect(deskX - 15, deskY - 20, 30, 25); 
                 
                 // [NEW] Warm White/Silver Glow for Logo Complete state
                 if (isLogoComplete) {
-                     const phase = Date.now() * 0.003;
-                     const b = Math.floor(150 + 105 * (Math.sin(phase) + 1) / 2);
-                     ctx.fillStyle = `rgb(255, 255, ${b})`;
-                     ctx.shadowColor = `rgb(255, 255, ${b})`; 
-                     ctx.shadowBlur = 10; 
+                      const phase = Date.now() * 0.003;
+                      const b = Math.floor(150 + 105 * (Math.sin(phase) + 1) / 2);
+                      ctx.fillStyle = `rgb(255, 255, ${b})`;
+                      ctx.shadowColor = `rgb(255, 255, ${b})`; 
+                      ctx.shadowBlur = 10; 
                 } else {
                     const hue = (monitorHueOffset + i * 10) % 360;
                     ctx.fillStyle = `hsl(${hue}, 70%, 80%)`;
@@ -1722,15 +1739,15 @@
             }
         });
         ctx.fillStyle = isLogoComplete ? 'rgba(255,255,255,0.5)' : '#94a3b8'; 
-        ctx.font = 'bold 15px "Pretendard", sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', canvas.width - 50, canvas.height - 30);
+        ctx.font = 'bold 15px "Pretendard", sans-serif'; ctx.textAlign='right'; ctx.fillText('©shimhayeon', width - 50, height - 30);
     }
     
     function animate() {
         if (!isGamePaused) {
-            const now = Date.now(); 
-            if (now - lastDropTime > CONFIG.dropInterval / GAME_SPEED) { 
-                const p = particles.find(p => p.state === 'WAITING'); 
-                if (p) { p.state = 'FALLING'; lastDropTime = now; } 
+            const now = Date.now(); 
+            if (now - lastDropTime > CONFIG.dropInterval / GAME_SPEED) { 
+                const p = particles.find(p => p.state === 'WAITING'); 
+                if (p) { p.state = 'FALLING'; lastDropTime = now; } 
             }
         }
 
@@ -1739,32 +1756,38 @@
         if (!isLogoComplete && placedCount > 0 && placedCount === particles.length) {
             isLogoComplete = true;
             mainSnowflakes = [];
-            for(let i=0; i<100; i++) mainSnowflakes.push(new MainSnowflake(canvas.width, canvas.height));
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            for(let i=0; i<100; i++) mainSnowflakes.push(new MainSnowflake(width, height));
             santaObj.active = true;
             santaObj.x = -100;
             santaObj.y = 100;
         }
+        
+        const width = window.innerWidth;
+        const height = window.innerHeight;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
-        drawEnvironment(); 
+        // Clear handled in drawEnvironment
+        // ctx.clearRect(0, 0, width, height); 
+        drawEnvironment(); 
         
         // [NEW] Draw snow and santa if logo complete
         if (isLogoComplete) {
             if (!isGamePaused) {
-                mainSnowflakes.forEach(s => s.update(canvas.width, canvas.height, GAME_SPEED));
+                mainSnowflakes.forEach(s => s.update(width, height, GAME_SPEED));
             }
             mainSnowflakes.forEach(s => s.draw(ctx));
             
             if (santaObj.active) {
                 if (!isGamePaused) santaObj.x += 2 * GAME_SPEED;
                 drawPixelSanta(ctx, santaObj.x, santaObj.y);
-                if (santaObj.x > canvas.width + 100) santaObj.x = -100; 
+                if (santaObj.x > width + 100) santaObj.x = -100; 
             }
 
-            drawStarlightText(ctx, "Happy New Year!", canvas.width/2, 150);
+            drawStarlightText(ctx, "Happy New Year!", width/2, 150);
         }
 
-        fairies.forEach(f => { f.update(); f.draw(); }); 
+        fairies.forEach(f => { f.update(); f.draw(); }); 
         
         // [MODIFIED] Draw Particles (Glow effect when complete)
         if (isLogoComplete) {
@@ -1783,7 +1806,7 @@
         if (hoveredFairy) { hoveredFairy.drawBubble(); canvas.style.cursor = 'pointer'; } else { canvas.style.cursor = 'default'; }
         
         if (!isGamePaused) {
-            monitorHueOffset += (isLogoComplete ? 5 : 1) * GAME_SPEED; 
+            monitorHueOffset += (isLogoComplete ? 5 : 1) * GAME_SPEED; 
         }
 
         // Logo text (guide) disappears when complete
@@ -1793,7 +1816,8 @@
             ctx.fillStyle = '#000'; 
             ctx.font = CONFIG.font; 
             ctx.textAlign='center'; 
-            ctx.fillText(CONFIG.text, canvas.width/2, canvas.height/2); 
+            ctx.textBaseline = 'middle'; // [FIX] 기준선을 중앙으로 설정하여 도트 위치와 일치시킴
+            ctx.fillText(CONFIG.text, width/2, height/2); 
             ctx.restore();
         }
 
@@ -1821,9 +1845,16 @@
         } catch (e) { console.error("Initial fetch failed:", e); }
     }
 
+    // Touch Handling - Optimized
     canvas.addEventListener('touchstart', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('#audio-btn') || e.target.closest('.modal-window')) return;
-        const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
+        
+        // Prevent mouse emulation events if handled here
+        // e.preventDefault(); 
+        
+        const touch = e.touches[0]; const rect = canvas.getBoundingClientRect(); 
+        const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
+        
         let touchedFairy = false;
         fairies.forEach(f => {
             if (Math.abs(tx - f.x) < 40 && Math.abs(ty - f.y) < 50) {
@@ -1836,6 +1867,7 @@
 
     window.addEventListener('mousedown', (e) => {
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('.modal-window') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
+        
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
         let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); 
     });
@@ -1850,10 +1882,20 @@
         if (closest !== prevHoveredFairy) { if (closest && closest.assignedMessage) { playSound('pop'); } prevHoveredFairy = closest; }
     });
     
-    window.addEventListener('resize', init); 
-    init(); 
-    loadInitialMessages(); 
-    animate();
+    // [FIX] 안전한 초기화: 모든 리소스 로딩 후 실행
+    window.onload = function() {
+        init(); 
+        loadInitialMessages(); 
+        animate();
+    };
+
+    // Resize handling with debounce
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(init, 200);
+    });
+    
 </script>
 </body>
 </html>
