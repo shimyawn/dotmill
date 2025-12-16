@@ -410,7 +410,7 @@
             화면에 보이는 동료들을 클릭해서 휴식을 선물하세요.<br>
             그리고 동료들에게 익명으로 메시지를 전하세요.
         </p>
-        <!-- [FIXED] 우측 상단 안내 텍스트 내 경고문 삭제 -->
+        <!-- [FIXED] 우측 상단 안내 텍스트 내 경고문 삭제됨 -->
     </div>
 
     <div id="custom-alert">
@@ -474,6 +474,12 @@
 
         <!-- TAB 2: 전체 메시지 내용 -->
         <div id="tab-content-all" class="tab-content" style="display:none;">
+            <!-- [NEW] 새로고침 버튼 영역 -->
+            <div style="padding: 15px; text-align: right; background: #fff; border-bottom: 1px solid #f1f5f9;">
+                <button id="refresh-all-btn" onclick="renderAllMessages()" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; cursor: pointer; color: #64748b; font-weight: 600; font-size: 0.85rem; font-family: 'Pretendard'; display: inline-flex; align-items: center; gap: 4px;">
+                    🔄 새로고침
+                </button>
+            </div>
             <!-- [NEW] 전체 메시지 그리드 컨테이너 -->
             <div id="all-msg-grid" class="post-it-grid"><div class="empty-msg">로딩 중... ⏳</div></div>
         </div>
@@ -918,7 +924,9 @@
         const container = document.getElementById('all-msg-grid');
         container.innerHTML = '<div class="empty-msg">데이터를 불러오는 중입니다...<br>(약 1~2초 소요)</div>';
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); 
+            // [FIXED] 캐시 방지를 위한 타임스탬프 쿼리 추가
+            const response = await fetch(GOOGLE_SCRIPT_URL + '?t=' + Date.now()); 
+            const data = await response.json(); 
             
             if (!data || data.length === 0) { container.innerHTML = '<div class="empty-msg">메시지 없음</div>'; return; }
             
