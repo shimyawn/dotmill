@@ -39,6 +39,8 @@
         #btn-help.active { background: #e0f2fe; color: #0ea5e9; border-color: #0ea5e9; }
         /* [NEW] 안내 토글 버튼 활성 상태 */
         #btn-guide-toggle.active { background: #e0f2fe; color: #0ea5e9; border-color: #0ea5e9; }
+        /* [NEW] Director's Note 버튼 활성 상태 */
+        #btn-note.active { background: #f0fdf4; color: #16a34a; border-color: #16a34a; }
 
         .warning-txt { color: #ea580c; font-weight: 600; background: #fff7ed; padding: 8px; border-radius: 8px; margin-top: 5px; font-size: 0.75rem; }
 
@@ -311,6 +313,20 @@
             transition: all 0.3s;
         }
 
+        /* [NEW] Director's Note 모달 스타일 */
+        #note-modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 30px; border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 320px; text-align: left;
+            z-index: 11000; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #f1f5f9;
+        }
+        .close-note-btn {
+            position: absolute; top: 15px; right: 20px; background: none; border: none;
+            font-size: 1.5rem; color: #94a3b8; cursor: pointer; transition: color 0.2s;
+        }
+        .close-note-btn:hover { color: #475569; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
         @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, -40%); } 10% { opacity: 1; transform: translate(-50%, -50%); } 90% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -60%); } }
@@ -393,6 +409,8 @@
             <button onclick="resetSimulation()" id="btn-reset" title="작업 초기화">🔄</button>
             <button id="btn-audio" title="배경음악 On/Off">🔇</button>
             <button onclick="restartTutorial()" id="btn-help" title="튜토리얼 다시보기">?</button>
+            <!-- [NEW] Director's Note 버튼 -->
+            <button onclick="toggleDirectorsNote()" id="btn-note" title="Director's Note">📝</button>
             <!-- [NEW] 모바일용 가이드 토글 버튼 -->
             <button onclick="toggleGuideText()" id="btn-guide-toggle" class="mobile-only" title="안내 보기">📜</button>
         </div>
@@ -410,13 +428,39 @@
             화면에 보이는 동료들을 클릭해서 휴식을 선물하세요.<br>
             그리고 동료들에게 익명으로 메시지를 전하세요.
         </p>
-        <!-- [FIXED] 우측 상단 안내 텍스트 내 경고문 삭제됨 -->
     </div>
 
     <div id="custom-alert">
         <span id="alert-check">✅</span>
         <h3>전송 완료!</h3>
         <p>익명으로 메시지가 무사히 전달되었습니다! 📨</p>
+    </div>
+
+    <!-- Director's Note Modal -->
+    <div id="note-modal">
+        <button class="close-note-btn" onclick="toggleDirectorsNote()">×</button>
+        <h3 style="text-align: center; margin: 0 0 15px 0; font-size: 1.4rem; color: #0f172a;">Director's Note 🎬</h3>
+        
+        <div style="font-size: 0.95rem; line-height: 1.7; color: #475569; margin-bottom: 25px; word-break: keep-all;">
+            <p style="margin: 0 0 15px 0;">
+                <b>안녕하세요, 닷밀의 동료 여러분! 👋</b>
+            </p>
+            <p style="margin: 0;">
+                한 해 동안 정말 고생 많으셨습니다.<br>
+                서로에게 전하지 못했던 따뜻한 말들을<br>
+                이곳에서나마 편하게 나누길 바라는 마음으로<br>
+                작은 방앗간을 뚝딱뚝딱 만들어보았습니다.<br><br>
+                이곳에서 잠시나마 웃으며 힐링하시길 바라요!<br>
+                새해 복 많이 받으세요 🙇‍♂️🙇‍♀️
+            </p>
+        </div>
+        
+        <div style="text-align: center; border-top: 1px dashed #e2e8f0; padding-top: 20px;">
+            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0 0 10px 0; font-weight: 600;">🎵 평화로운 BGM이 마음에 드시나요?</p>
+            <a href="https://suno.com/@shimyawn" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #3b82f6; color: white; text-decoration: none; padding: 10px 20px; border-radius: 50px; font-size: 0.9rem; font-weight: 700; transition: all 0.2s; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">
+                <span>🎧</span> DOTMILL OST 듣기
+            </a>
+        </div>
     </div>
 
     <!-- 로딩 오버레이 (삭제는 하지 않고 유지하되, 전송시에는 애니메이션으로 대체됨) -->
@@ -619,6 +663,30 @@
         }
     }
 
+    // [NEW] Director's Note 토글 함수
+    function toggleDirectorsNote() {
+        const modal = document.getElementById('note-modal');
+        const overlay = document.getElementById('tutorial-backdrop'); // 백드롭 재사용
+        const btn = document.getElementById('btn-note');
+        
+        if (modal.style.display === 'block') {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+            btn.classList.remove('active');
+        } else {
+            // 다른 창들 닫기
+            document.getElementById('my-msg-modal').style.display = 'none';
+            document.getElementById('modal-overlay').style.display = 'none';
+            
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+            btn.classList.add('active');
+            
+            // 백드롭 클릭시 닫기 이벤트 임시 연결
+            overlay.onclick = () => { toggleDirectorsNote(); };
+        }
+    }
+
     // [NEW] 튜토리얼 로직
     let tutoStep = 0;
     const tutorialSteps = [
@@ -636,6 +704,9 @@
         
         tutoStep = 0; // 초기화
         document.getElementById('tutorial-backdrop').style.display = 'block';
+        // 백드롭 클릭 이벤트 초기화 (튜토리얼용)
+        document.getElementById('tutorial-backdrop').onclick = null;
+        
         const modal = document.getElementById('tutorial-modal');
         modal.style.display = 'block';
         updateTutorialUI();
