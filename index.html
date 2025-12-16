@@ -1035,7 +1035,9 @@
         mbGrid.innerHTML = '';
 
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL); const data = await response.json(); 
+            // [FIXED] 캐시 방지
+            const response = await fetch(GOOGLE_SCRIPT_URL + '?t=' + Date.now()); 
+            const data = await response.json(); 
             if (!data || data.length === 0) { 
                 const emptyText = '아직 도착한 편지가 없어요 😢';
                 mbPlaceholder.innerHTML = emptyText; return; 
@@ -1896,6 +1898,9 @@
     function isVisible(f) { return f.x > 20 && f.x < canvas.width/(window.devicePixelRatio||1) - 20 && f.y > 0 && f.y < canvas.height/(window.devicePixelRatio||1); }
 
     window.distributeSingleMessage = (newMsg) => {
+        // [FIXED] 방금 보낸 메시지도 'ALL'이 아니면 요정에게 할당하지 않음 (프라이버시 보호)
+        if (newMsg.name !== 'ALL') return;
+
         let target = fairies.find(f => f.assignedMessage === null && isVisible(f));
         if (!target) {
             const visibleFairies = fairies.filter(f => isVisible(f));
@@ -2060,12 +2065,18 @@
     // Initial Load function definition
     async function loadInitialMessages() {
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL);
+            // [FIXED] 캐시 방지 쿼리 추가
+            const response = await fetch(GOOGLE_SCRIPT_URL + '?t=' + Date.now());
             const data = await response.json(); 
             if (data && data.length > 0) {
-                const recent10 = [...data].reverse().slice(0, 10);
+                // [FIXED] 'ALL(모두)'에게 보낸 메시지만 필터링하여 로드
+                const publicMessages = data.filter(row => row[1] === 'ALL');
+                
+                // 최신순으로 정렬하고 최대 60개까지만 가져옴
+                const recentMessages = [...publicMessages].reverse().slice(0, 60);
+                
                 const shuffledFairies = [...fairies].sort(() => 0.5 - Math.random());
-                recent10.forEach((row, idx) => {
+                recentMessages.forEach((row, idx) => {
                     if (idx < shuffledFairies.length) {
                         const f = shuffledFairies[idx];
                         f.assignedMessage = { name: row[1], text: row[2] };
