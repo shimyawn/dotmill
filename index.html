@@ -1189,6 +1189,9 @@
     let monitorHueOffset = 0, isLogoComplete = false;
     let zones={ hopper:{x:0,y:0}, beltStart:{x:0,y:0}, beltEnd:{x:0,y:0}, storage:{x:0,y:0}, office:{x:0,y:0,w:0,h:0} };
 
+    // [NEW] 고양이 변수 추가
+    let cat = null;
+
     let vacationCounter = 0;
     let isSantaMode = false;
     let santaTimer = null;
@@ -1560,6 +1563,319 @@
             }
         }
         reset(){this.state='RETURNING';this.carrier=null;}
+    }
+
+    // [NEW] 츄츄(고양이) 클래스 추가
+    class Cat {
+        constructor() {
+            this.x = window.innerWidth / 2 - 150; // 초기 위치: 감독관 오른쪽
+            this.y = window.innerHeight / 2 + 50; // 높이: 비계 바닥 부근
+            this.state = 'SIT'; // IDLE, WALK, SIT, SLEEP, GROOM
+            this.timer = Math.random() * 200;
+            this.dir = 1; // 1: 오른쪽, -1: 왼쪽
+            this.targetX = this.x;
+            this.animFrame = 0;
+            
+            // 츄츄 색상: 갈색 위주 + 흰색 배
+            this.colorWhite = '#ffffff';
+            this.colorBrown = '#8d6e63'; // 전체적인 갈색 털
+            this.colorDarkBrown = '#5d4037'; // 코/입 등 포인트
+
+            // [NEW] 반응 상태 (하트 뿅)
+            this.isReacting = false;
+            this.reactionTimer = 0;
+        }
+
+        // [MODIFIED] 상호작용 메서드 (클릭 시 호출 - 하트 반응)
+        interact() {
+            playSound('pop'); // 가벼운 반응 소리
+            
+            this.isReacting = true;
+            this.reactionTimer = 60; // 약 1초 (60프레임) 유지
+            
+            // 즉시 제자리에 멈춰서 앉음
+            this.state = 'SIT';
+            this.timer = 100; // 반응 끝난 후에도 잠시 대기
+            this.animFrame = 0;
+        }
+
+        update() {
+            if (isGamePaused) return;
+
+            // [NEW] 반응 중일 때는 타이머만 줄이고 움직임 로직은 건너뜀 (멈춤 효과)
+            if (this.isReacting) {
+                this.reactionTimer -= 1 * GAME_SPEED;
+                if (this.reactionTimer <= 0) {
+                    this.isReacting = false;
+                }
+                // 숨쉬기 애니메이션은 계속 진행
+                this.animFrame += 0.1 * GAME_SPEED;
+                return; 
+            }
+
+            // 기존 로직
+            this.timer -= 1 * GAME_SPEED;
+            this.animFrame += 0.1 * GAME_SPEED;
+
+            if (this.timer <= 0) {
+                this.pickNewState();
+            }
+
+            if (this.state === 'WALK') {
+                const speed = 0.5 * GAME_SPEED;
+                const dx = this.targetX - this.x;
+                
+                if (Math.abs(dx) < 1) {
+                    this.x = this.targetX;
+                    this.state = 'IDLE'; // 도착하면 잠시 대기
+                    this.timer = 50 + Math.random() * 100;
+                } else {
+                    this.x += Math.sign(dx) * speed;
+                    this.dir = Math.sign(dx);
+                }
+            }
+        }
+
+        pickNewState() {
+            const rand = Math.random();
+            const centerX = window.innerWidth / 2;
+            
+            // 행동 반경: 감독관(약 -250) ~ 로고 중앙(-50) 사이
+            const minX = centerX - 220;
+            const maxX = centerX - 60;
+
+            if (rand < 0.4) { // 40% 확률로 걷기
+                this.state = 'WALK';
+                this.targetX = minX + Math.random() * (maxX - minX);
+                this.timer = 500; // 걷기 타임아웃
+            } else if (rand < 0.7) { // 30% 확률로 앉기
+                this.state = 'SIT';
+                this.timer = 100 + Math.random() * 200;
+            } else if (rand < 0.85) { // 15% 확률로 그루밍
+                this.state = 'GROOM';
+                this.timer = 100 + Math.random() * 150;
+            } else { // 15% 확률로 잠자기
+                this.state = 'SLEEP';
+                this.timer = 300 + Math.random() * 300;
+            }
+        }
+
+        draw(ctx) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            // [NEW] 반응 중일 때 노란 빛 효과 (Glow)
+            if (this.isReacting) {
+                ctx.shadowColor = '#facc15'; // 따뜻한 노란색
+                ctx.shadowBlur = 20;
+            }
+
+            // 방향 전환 (왼쪽 볼 때 뒤집기)
+            if (this.dir === -1) ctx.scale(-1, 1);
+
+            // 그림자
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.beginPath(); ctx.ellipse(0, 0, 8, 3, 0, 0, Math.PI*2); ctx.fill();
+
+            // 위치 보정 (발을 기준점으로)
+            ctx.translate(0, -5);
+
+            const breathe = Math.sin(this.animFrame * 0.5);
+
+            if (this.state === 'WALK') {
+                // 다리 애니메이션
+                const legOffset = Math.sin(this.animFrame * 2) * 2;
+                
+                // 뒷다리 [흰색]
+                ctx.fillStyle = this.colorWhite;
+                ctx.fillRect(-6 + legOffset, 2, 2, 3);
+                ctx.fillRect(4 - legOffset, 2, 2, 3);
+
+                // 몸통 (갈색 베이스)
+                ctx.fillStyle = this.colorBrown;
+                ctx.fillRect(-7, -4, 13, 6);
+                
+                // 배 (흰색)
+                ctx.fillStyle = this.colorWhite;
+                ctx.fillRect(-6, 0, 11, 2); 
+
+                // 앞다리 [흰색]
+                ctx.fillStyle = this.colorWhite;
+                ctx.fillRect(-6 - legOffset, 2, 2, 3);
+                ctx.fillRect(4 + legOffset, 2, 2, 3);
+
+                // 머리 (갈색)
+                ctx.translate(6, -2 + breathe * 0.5); 
+                this.drawHead(ctx);
+                
+                // 꼬리 (갈색)
+                ctx.restore(); 
+                ctx.save();
+                // 꼬리 그리기용 좌표 복구 및 설정 (복잡성 감소)
+                ctx.translate(this.dir === 1 ? this.x - 7 : this.x + 7, this.y - 7); 
+                if(this.dir === -1) ctx.scale(-1, 1);
+                
+                ctx.rotate(Math.sin(this.animFrame * 3) * 0.2 - 0.5);
+                ctx.fillStyle = this.colorBrown;
+                ctx.fillRect(-2, 0, 2, 6); 
+                
+                // [NEW] 걷는 중 반응 시 하트 (꼬리 그리기 후 복귀라 별도 처리 필요하지만 간단히 여기서 끝냄)
+                if (this.isReacting) this.drawHeart(ctx, true);
+                
+                ctx.restore();
+                return; 
+
+            } else if (this.state === 'SIT' || this.state === 'IDLE') {
+                // 앉은 자세
+                // 몸통 (갈색)
+                ctx.fillStyle = this.colorBrown;
+                ctx.fillRect(-5, -2, 8, 7); 
+                
+                // 배/가슴 (흰색)
+                ctx.fillStyle = this.colorWhite;
+                ctx.fillRect(-1, -1, 3, 6);
+
+                // 앞발 [흰색]
+                ctx.fillStyle = this.colorWhite;
+                ctx.fillRect(1, 3, 2, 2); 
+
+                // 머리
+                ctx.translate(0, -6 + breathe * 0.5);
+                this.drawHead(ctx);
+
+                // 꼬리 (갈색, 바닥에 둠)
+                ctx.fillStyle = this.colorBrown;
+                ctx.fillRect(-8, 3, 3, 2); 
+
+            } else if (this.state === 'GROOM') {
+                // 그루밍
+                ctx.fillStyle = this.colorBrown;
+                ctx.fillRect(-6, 0, 10, 5); 
+                ctx.fillStyle = this.colorWhite;
+                ctx.fillRect(-4, 3, 6, 2);
+
+                // 머리 (숙임)
+                ctx.translate(2, 1 + Math.sin(this.animFrame * 4)*1); 
+                this.drawHead(ctx);
+
+            } else if (this.state === 'SLEEP') {
+                // 자는 자세
+                ctx.translate(0, 3);
+                ctx.fillStyle = this.colorBrown;
+                ctx.fillRect(-6, -2, 12, 4); 
+                ctx.fillStyle = this.colorWhite;
+                ctx.fillRect(-5, 1, 10, 1);
+
+                // 머리
+                ctx.translate(5, 0);
+                this.drawHead(ctx, true); 
+
+                // Zzz...
+                if (Math.floor(this.animFrame) % 60 < 30) {
+                    ctx.fillStyle = '#aaa';
+                    ctx.font = '8px sans-serif';
+                    ctx.fillText('z', 2 + (this.animFrame%20)/2, -5 - (this.animFrame%20));
+                }
+            }
+            
+            // [NEW] 하트 그리기 (WALK 상태 아닐 때 여기서 처리)
+            if (this.isReacting) {
+                // 머리 위쪽 좌표 찾기 (상태별로 다를 수 있으나 대략적으로)
+                // 현재 ctx는 머리 변환이 적용된 상태일 수도 아닐 수도 있음.
+                // 안전하게 로컬 좌표계 원점으로 복귀 후 그리기 위해 restore/save 패턴 대신,
+                // 현재 변환 상태를 고려해야 함. 
+                // 위 코드 구조상 SIT/SLEEP 등은 머리 그린 후 translate 상태임.
+                
+                // 하트 그리기 (머리 위)
+                ctx.save();
+                // 방향키가 반전(-1) 되어 있다면 하트도 뒤집히니 다시 반전
+                // (상위 스코프에서 scale(-1,1) 했으므로 여기서 다시 하면 정방향)
+                // 하지만 this.dir 체크가 필요함.
+                // 간단히: 그냥 그립니다. 하트는 좌우 대칭이니까요! 
+                // 다만 빛나는 효과(shadow)가 하트에도 적용됨.
+                
+                ctx.translate(0, -10); // 머리 위로 이동
+                
+                // 하트 모양
+                ctx.fillStyle = '#ef4444'; 
+                ctx.beginPath();
+                // 픽셀 하트 느낌
+                const hs = 1; // heart scale
+                ctx.fillRect(-2*hs, -2*hs, 1*hs, 1*hs);
+                ctx.fillRect(1*hs, -2*hs, 1*hs, 1*hs);
+                ctx.fillRect(-3*hs, -1*hs, 2*hs, 1*hs);
+                ctx.fillRect(1*hs, -1*hs, 2*hs, 1*hs);
+                ctx.fillRect(-3*hs, 0, 6*hs, 1*hs);
+                ctx.fillRect(-2*hs, 1*hs, 4*hs, 1*hs);
+                ctx.fillRect(-1*hs, 2*hs, 2*hs, 1*hs);
+                ctx.fillRect(0, 3*hs, 0.5*hs, 0.5*hs); // 뾰족 끝
+                
+                ctx.fill();
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+        
+        // [NEW] 걷는 상태에서 꼬리 그리기 위해 캔버스 복구한 뒤 호출되는 하트 그리기 헬퍼
+        drawHeart(ctx, isGlobalCoords = false) {
+             ctx.save();
+             if (isGlobalCoords) {
+                 ctx.translate(this.x, this.y - 25); // 전역 좌표일 때 위치 잡기
+             }
+             
+             ctx.fillStyle = '#ef4444'; 
+             ctx.shadowColor = '#facc15'; ctx.shadowBlur = 10; // 빛나는 효과
+             
+             // 픽셀 하트
+             const hs = 1.5; 
+             ctx.fillRect(-2*hs, -2*hs, 1*hs, 1*hs);
+             ctx.fillRect(1*hs, -2*hs, 1*hs, 1*hs);
+             ctx.fillRect(-3*hs, -1*hs, 5*hs, 1*hs); // 통
+             ctx.fillRect(-3*hs, 0, 6*hs, 1*hs);
+             ctx.fillRect(-2*hs, 1*hs, 4*hs, 1*hs);
+             ctx.fillRect(-1*hs, 2*hs, 2*hs, 1*hs);
+             
+             ctx.restore();
+        }
+
+        drawHead(ctx, isSleeping = false) {
+            // 얼굴 (전체 갈색)
+            ctx.fillStyle = this.colorBrown;
+            ctx.fillRect(-3, -3, 7, 6); // 얼굴 베이스
+            
+            // 입가(주둥이) 하얗게 포인트
+            ctx.fillStyle = this.colorWhite;
+            ctx.fillRect(-2, 1, 5, 2); 
+
+            // 귀 (갈색)
+            ctx.fillStyle = this.colorBrown;
+            ctx.fillRect(-3, -5, 2, 2);
+            ctx.fillRect(2, -5, 2, 2);
+
+            // 코 (진한 갈색)
+            ctx.fillStyle = this.colorDarkBrown;
+            ctx.fillRect(0, 0, 2, 1); 
+
+            if (!isSleeping) {
+                // 눈 (깜빡임)
+                if (Math.random() > 0.02) {
+                    ctx.fillStyle = '#333'; // 검은 눈
+                    ctx.fillRect(-1, -1, 1, 1);
+                    ctx.fillRect(2, -1, 1, 1);
+                } else {
+                    // 감은 눈
+                    ctx.fillStyle = '#5d4037'; 
+                    ctx.fillRect(-1, -1, 2, 1);
+                    ctx.fillRect(2, -1, 2, 1);
+                }
+            } else {
+                // 자는 눈
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(-1, 0, 2, 1);
+                ctx.fillRect(2, 0, 2, 1);
+            }
+        }
     }
 
     class Fairy {
@@ -1962,6 +2278,9 @@
         for(let i=0; i<CONFIG.engineerCount; i++) fairies.push(new Fairy('ENGINEER'));
         for(let i=0; i<CONFIG.officeCount; i++) fairies.push(new Fairy('OFFICE', i));
         
+        // [NEW] 고양이 생성
+        cat = new Cat();
+
         // [NEW] 튜토리얼 실행 체크
         setTimeout(runTutorial, 500); // 0.5초 후 시작
     }
@@ -2098,6 +2417,12 @@
 
         fairies.forEach(f => { f.update(); f.draw(); }); 
         
+        // [NEW] 고양이 업데이트 및 그리기
+        if (cat) {
+            cat.update();
+            cat.draw(ctx);
+        }
+
         // [MODIFIED] Draw Particles (Glow effect when complete)
         if (isLogoComplete) {
             ctx.save();
@@ -2171,6 +2496,16 @@
         const tx = touch.clientX - rect.left; const ty = touch.clientY - rect.top;
         
         let touchedFairy = false;
+        
+        // [NEW] 츄츄 터치 체크 (interact 호출로 변경)
+        if (cat) {
+            const dist = Math.sqrt(Math.pow(tx - cat.x, 2) + Math.pow(ty - cat.y, 2));
+            if (dist < 40) {
+                cat.interact(); // [MODIFIED] giveRest -> interact
+                return; 
+            }
+        }
+
         fairies.forEach(f => {
             if (Math.abs(tx - f.x) < 40 && Math.abs(ty - f.y) < 50) {
                 touchedFairy = true;
@@ -2184,6 +2519,16 @@
         if (e.target.closest('#input-bar') || e.target.closest('#modal-overlay') || e.target.closest('.modal-window') || e.target.closest('#view-all-btn') || e.target.closest('#audio-btn')) return;
         
         const rect = canvas.getBoundingClientRect(); const cx = e.clientX - rect.left; const cy = e.clientY - rect.top;
+        
+        // [NEW] 츄츄 클릭 체크 (interact 호출로 변경)
+        if (cat) {
+            const dist = Math.sqrt(Math.pow(cx - cat.x, 2) + Math.pow(cy - cat.y, 2));
+            if (dist < 30) {
+                cat.interact(); // [MODIFIED] giveRest -> interact
+                return; 
+            }
+        }
+
         let clickedFairy = false; fairies.forEach(f => { if (Math.sqrt(Math.pow(cx-f.x,2)+Math.pow(cy-f.y,2)) < 30) { f.giveVacation(); clickedFairy = true; } }); 
     });
 
