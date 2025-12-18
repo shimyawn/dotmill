@@ -1630,6 +1630,23 @@
         update() {
             if (isGamePaused) return;
 
+            // [NEW] 로고 완성 시 위치 조정 로직
+            // 로고가 완성되었는데 아직 왼쪽에 있다면, 오른쪽으로 이동 명령
+            if (typeof isLogoComplete !== 'undefined' && isLogoComplete) {
+                const safeZoneX = window.innerWidth / 2 + 250; // 로고 오른쪽 안전지대
+                
+                // 현재 위치가 안전지대보다 왼쪽이라면
+                if (this.x < safeZoneX) {
+                    // 이미 걷고 있고 목표가 오른쪽이면 놔둠, 아니면 강제 이동 시작
+                    if (this.state !== 'WALK' || this.targetX < safeZoneX) {
+                        this.state = 'WALK';
+                        this.targetX = safeZoneX + Math.random() * 50; // 오른쪽 어딘가로
+                        this.timer = 500; // 걷기 시간 확보
+                        this.isReacting = false; // 반응 중이었다면 취소하고 이동
+                    }
+                }
+            }
+
             // [NEW] 반응 중일 때는 타이머만 줄이고 움직임 로직은 건너뜀 (멈춤 효과)
             if (this.isReacting) {
                 this.reactionTimer -= 1 * GAME_SPEED;
@@ -1668,9 +1685,19 @@
             const rand = Math.random();
             const centerX = window.innerWidth / 2;
             
-            // 행동 반경: 감독관(약 -250) ~ 로고 중앙(-50) 사이
-            const minX = centerX - 220;
-            const maxX = centerX - 60;
+            // [MODIFIED] 로고 완성 여부에 따른 행동 반경 설정
+            let minX, maxX;
+            
+            if (typeof isLogoComplete !== 'undefined' && isLogoComplete) {
+                // 로고 완성 시: 로고 오른쪽으로 이동 (가려지지 않게)
+                // 대략 중앙에서 +280 ~ +380 픽셀 지점
+                minX = centerX + 280; 
+                maxX = centerX + 380;
+            } else {
+                // 평소: 감독관(약 -250) ~ 로고 중앙(-50) 사이
+                minX = centerX - 220;
+                maxX = centerX - 60;
+            }
 
             if (rand < 0.4) { // 40% 확률로 걷기
                 this.state = 'WALK';
