@@ -878,7 +878,10 @@
             receiver = 'ALL';
         } else {
             const namePattern = /^[가-힣]{3}$/;
-            if (!namePattern.test(rawName)) return alert("받는 분의 정확한 이름을 입력해주세요.\n(한글 3글자)");
+            // [MODIFIED] 츄츄(2글자) 예외 허용
+            if (rawName !== '츄츄' && !namePattern.test(rawName)) {
+                 return alert("받는 분의 정확한 이름을 입력해주세요.\n(한글 3글자)");
+            }
             receiver = rawName;
         }
 
@@ -1682,6 +1685,8 @@
 
             const breathe = Math.sin(this.animFrame * 0.5);
 
+            // [MODIFIED] 날개 그리기 제거됨
+
             if (this.state === 'WALK') {
                 // 다리 애니메이션
                 const legOffset = Math.sin(this.animFrame * 2) * 2;
@@ -1817,6 +1822,8 @@
             ctx.restore();
         }
         
+        // [MODIFIED] 천사 날개 그리기 헬퍼 제거됨
+        
         // [NEW] 걷는 상태에서 꼬리 그리기 위해 캔버스 복구한 뒤 호출되는 하트 그리기 헬퍼
         drawHeart(ctx, isGlobalCoords = false) {
              ctx.save();
@@ -1875,6 +1882,8 @@
                 ctx.fillRect(-1, 0, 2, 1);
                 ctx.fillRect(2, 0, 2, 1);
             }
+
+            // [MODIFIED] 엔젤링 (헤일로) 제거됨
         }
     }
 
