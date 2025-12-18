@@ -382,13 +382,38 @@
             /* 5. 우편함 아이콘 위치 조정 */
             #mailbox-icon { right: 20px; bottom: 200px; }
             
-            /* 6. 입력바 조정 */
-            #input-bar { bottom: 20px; width: 95%; padding: 8px; gap: 6px; }
-            .to-all-wrapper { font-size: 13px; }
-            #receiver-input { width: 50px; font-size: 13px; }
-            #msg-input { font-size: 14px; }
-            #send-btn { width: 36px; height: 36px; font-size: 1rem; }
-            #style-toggle-btn { width: 36px; height: 36px; font-size: 1.1rem; }
+            /* 6. 입력바 조정 [FIXED] 전송 버튼 잘림 해결 */
+            #input-bar { 
+                bottom: 20px; 
+                width: 94%; /* 너비 확보 */
+                padding: 6px 8px; /* 패딩 축소 */
+                gap: 4px; /* 간격 축소 */
+                justify-content: space-between;
+                box-sizing: border-box; /* 패딩 포함 계산 명시 */
+            }
+            
+            /* 구성 요소 크기 최적화 */
+            .to-all-wrapper { font-size: 11px; margin-right: 0; }
+            .to-all-wrapper input { width: 14px; height: 14px; margin-right: 2px; }
+            .to-all-wrapper span { font-size: 11px; letter-spacing: -1px; } /* 글자 작게 */
+
+            #receiver-input { width: 42px; font-size: 12px; padding: 8px 4px; }
+            
+            #style-toggle-btn { width: 34px; height: 34px; font-size: 1rem; }
+            
+            /* [중요] 메시지 입력창이 줄어들 수 있도록 설정 */
+            #msg-input { 
+                font-size: 13px; 
+                padding: 8px 10px; 
+                min-width: 0; /* Flex item shrink 허용 */
+                flex: 1; /* 남은 공간 차지 */
+            }
+            
+            #send-btn { 
+                width: 34px; height: 34px; font-size: 0.9rem; 
+                flex-shrink: 0; /* 버튼 크기 유지 */
+                margin-left: 2px;
+            }
             
             /* 7. 모달 조정 */
             .modal-window { width: 340px; height: 500px; }
@@ -1860,6 +1885,32 @@
             ctx.fillRect(-3, -5, 2, 2);
             ctx.fillRect(2, -5, 2, 2);
 
+            // [NEW] 로고 완성 시(크리스마스 모드) 츄츄 산타 모자 착용 🎅
+            if (typeof isLogoComplete !== 'undefined' && isLogoComplete) {
+                ctx.save();
+                // 귀 사이로 모자 위치 조정
+                ctx.translate(0, -5);
+                
+                // 모자 본체 (빨강)
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.moveTo(-4, 0);
+                ctx.lineTo(4, 0);
+                ctx.lineTo(0, -7); // 뾰족한 끝 (약간 길게)
+                ctx.fill();
+
+                // 모자 밑단 털 (흰색)
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(-5, -1, 10, 2);
+                
+                // 모자 끝 방울 (흰색)
+                ctx.beginPath();
+                ctx.arc(0, -7, 1.5, 0, Math.PI*2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+
             // 코 (진한 갈색)
             ctx.fillStyle = this.colorDarkBrown;
             ctx.fillRect(0, 0, 2, 1); 
@@ -2131,7 +2182,8 @@
                 ctx.restore();
             }
 
-            if (isSantaMode) {
+            // [MODIFIED] 산타 모드 또는 로고 완성 시 직원들도 산타 모자 착용 🎅
+            if (isSantaMode || (typeof isLogoComplete !== 'undefined' && isLogoComplete)) {
                 ctx.fillStyle = '#ef4444'; 
                 ctx.beginPath(); ctx.moveTo(-6, -16); ctx.lineTo(0, -26); ctx.lineTo(6, -16); ctx.fill();
                 ctx.fillStyle = '#fff'; 
